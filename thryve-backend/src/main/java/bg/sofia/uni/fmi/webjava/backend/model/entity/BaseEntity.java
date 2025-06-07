@@ -5,11 +5,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.UUID;
 
 @MappedSuperclass
 @Data
+@Getter
 public abstract class BaseEntity {
 
     @Id
