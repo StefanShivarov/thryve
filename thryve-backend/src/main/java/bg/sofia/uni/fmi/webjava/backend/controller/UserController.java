@@ -1,10 +1,9 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.dto.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.dto.UpdateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.dto.response.EntityModificationResponse;
-import bg.sofia.uni.fmi.webjava.backend.dto.response.UserResponseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.response.EntityModificationResponse;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.response.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

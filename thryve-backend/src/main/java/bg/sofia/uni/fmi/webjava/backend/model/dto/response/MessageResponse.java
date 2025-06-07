@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.webjava.backend.dto.response;
+package bg.sofia.uni.fmi.webjava.backend.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
