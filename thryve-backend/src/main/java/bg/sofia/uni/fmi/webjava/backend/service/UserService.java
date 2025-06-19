@@ -79,12 +79,9 @@ public class UserService {
 
     @Transactional
     public UserResponseDto deleteUserById(UUID id) {
-        User user = userRepository.findById(id).orElseThrow(
-            () -> new EntityNotFoundException(
-                format(USER_NOT_FOUND_ERROR_MESSAGE, id)));
-
-        userRepository.delete(user);
-        return userDtoMapper.mapUserToResponseDto(user);
+        UserResponseDto userResponseDto = getUserById(id);
+        userRepository.deleteById(id);
+        return userResponseDto;
     }
 
 }
