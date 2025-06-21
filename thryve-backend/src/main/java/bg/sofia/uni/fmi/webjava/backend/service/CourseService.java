@@ -2,9 +2,9 @@ package bg.sofia.uni.fmi.webjava.backend.service;
 
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.CourseDtoMapper;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.CourseResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CreateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.repository.CourseRepository;
 import jakarta.transaction.Transactional;

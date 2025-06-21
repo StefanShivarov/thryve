@@ -1,8 +1,8 @@
 package bg.sofia.uni.fmi.webjava.backend.service;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.UserResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.CreateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityAlreadyExistsException;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.UserDtoMapper;

@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.webjava.backend.model.dto;
+package bg.sofia.uni.fmi.webjava.backend.model.dto.course;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
