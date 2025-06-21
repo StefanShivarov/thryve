@@ -1,10 +1,10 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.response.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.response.EntityModificationResponse;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.UserResponseDto;
-import bg.sofia.uni.fmi.webjava.backend.service.UserService;
+import bg.sofia.uni.fmi.webjava.backend.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,18 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/courses")
 @RequiredArgsConstructor
-public class UserController {
+public class CourseController {
 
-    public static final String CREATED_USER_MESSAGE = "User created successfully!";
-    public static final String UPDATED_USER_MESSAGE = "User updated successfully!";
-    public static final String DELETED_USER_MESSAGE = "User deleted successfully!";
+    private static final String COURSE_UPDATED_MESSAGE = "Course updated successfully!";
+    private static final String COURSE_DELETED_MESSAGE = "Course deleted successfully!";
 
-    private final UserService userService;
+    private final CourseService courseService;
 
     @GetMapping(value = {"", "/"})
-    public ResponseEntity<Page<UserResponseDto>> getAllUsers(
+    public ResponseEntity<Page<CourseResponseDto>> getAllCourses(
         @RequestParam(defaultValue = "0") int pageNumber,
         @RequestParam(defaultValue = "10") int pageSize,
         @RequestParam(defaultValue = "id") String sortBy,
@@ -45,35 +44,37 @@ public class UserController {
     ) {
         Sort.Direction sortDirection = Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC);
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortDirection, sortBy));
-        return ResponseEntity.ok(userService.getAllUsers(pageable));
+        return ResponseEntity.ok(courseService.getAllCourses(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<CourseResponseDto> getCourseById(@PathVariable UUID id) {
+        return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
     @PostMapping(value = {"", "/"})
-    public ResponseEntity<EntityModificationResponse<UserResponseDto>> registerUser(@RequestBody @Valid CreateUserDto createUserDto) {
+    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CreateCourseDto createCourseDto) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(new EntityModificationResponse<>(CREATED_USER_MESSAGE, userService.createUser(createUserDto)));
+            .body(courseService.createCourse(createCourseDto));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<EntityModificationResponse<UserResponseDto>> updateUserById(
+    public ResponseEntity<EntityModificationResponse<CourseResponseDto>> updateCourseById(
         @PathVariable UUID id,
-        @RequestBody @Valid UpdateUserDto updateUserDto
+        @RequestBody UpdateCourseDto updateCourseDto
     ) {
         return ResponseEntity.ok(
-            new EntityModificationResponse<>(UPDATED_USER_MESSAGE, userService.updateUserById(id, updateUserDto))
+            new EntityModificationResponse<>(
+                COURSE_UPDATED_MESSAGE,
+                courseService.updateCourseById(id, updateCourseDto))
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<EntityModificationResponse<UserResponseDto>> deleteUserById(@PathVariable UUID id) {
+    public ResponseEntity<EntityModificationResponse<CourseResponseDto>> deleteCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(
-            new EntityModificationResponse<>(DELETED_USER_MESSAGE, userService.deleteUserById(id))
+            new EntityModificationResponse<>(COURSE_DELETED_MESSAGE, courseService.deleteCourseById(id))
         );
     }
 
