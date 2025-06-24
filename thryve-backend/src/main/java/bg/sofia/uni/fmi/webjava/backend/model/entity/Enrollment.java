@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class Enrollment extends BaseEntity {
 
     @Column(name = "enrolled_at", nullable = false)
-    private LocalDateTime enrolledAt;
+    private LocalDateTime enrolledAt = LocalDateTime.now();
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
