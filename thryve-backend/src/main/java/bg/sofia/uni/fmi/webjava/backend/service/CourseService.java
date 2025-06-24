@@ -34,10 +34,13 @@ public class CourseService {
 
     @Transactional
     public CourseResponseDto getCourseById(UUID id) {
-        Course course = courseRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
+        return courseDtoMapper.mapCourseToResponseDto(getCourseEntityById(id));
+    }
 
-        return courseDtoMapper.mapCourseToResponseDto(course);
+    @Transactional
+    public Course getCourseEntityById(UUID id) {
+        return courseRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
     }
 
     @Transactional
@@ -48,9 +51,7 @@ public class CourseService {
 
     @Transactional
     public CourseResponseDto updateCourseById(UUID id, UpdateCourseDto updateCourseDto) {
-        Course course = courseRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
-
+        Course course = getCourseEntityById(id);
         courseDtoMapper.updateCourseFromDto(updateCourseDto, course);
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }

@@ -40,11 +40,14 @@ public class UserService {
 
     @Transactional
     public UserResponseDto getUserById(UUID id) {
-        User user = userRepository.findById(id).orElseThrow(
+        return userDtoMapper.mapUserToResponseDto(getUserEntityById(id));
+    }
+
+    @Transactional
+    public User getUserEntityById(UUID id) {
+        return userRepository.findById(id).orElseThrow(
             () -> new EntityNotFoundException(
                 format(USER_NOT_FOUND_ERROR_MESSAGE, id)));
-
-        return userDtoMapper.mapUserToResponseDto(user);
     }
 
     @Transactional
