@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.webjava.backend.model.dto.response;
+package bg.sofia.uni.fmi.webjava.backend.model.dto.user;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

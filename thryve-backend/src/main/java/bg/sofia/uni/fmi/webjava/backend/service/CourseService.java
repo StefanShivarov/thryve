@@ -2,9 +2,9 @@ package bg.sofia.uni.fmi.webjava.backend.service;
 
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.CourseDtoMapper;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.CourseResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CreateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.repository.CourseRepository;
 import jakarta.transaction.Transactional;
@@ -34,10 +34,13 @@ public class CourseService {
 
     @Transactional
     public CourseResponseDto getCourseById(UUID id) {
-        Course course = courseRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
+        return courseDtoMapper.mapCourseToResponseDto(getCourseEntityById(id));
+    }
 
-        return courseDtoMapper.mapCourseToResponseDto(course);
+    @Transactional
+    public Course getCourseEntityById(UUID id) {
+        return courseRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
     }
 
     @Transactional
@@ -48,9 +51,7 @@ public class CourseService {
 
     @Transactional
     public CourseResponseDto updateCourseById(UUID id, UpdateCourseDto updateCourseDto) {
-        Course course = courseRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(format(COURSE_NOT_FOUND_ERROR_MESSAGE, id)));
-
+        Course course = getCourseEntityById(id);
         courseDtoMapper.updateCourseFromDto(updateCourseDto, course);
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }

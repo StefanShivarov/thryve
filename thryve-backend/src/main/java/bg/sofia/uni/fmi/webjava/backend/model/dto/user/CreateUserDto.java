@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.webjava.backend.model.dto;
+package bg.sofia.uni.fmi.webjava.backend.model.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

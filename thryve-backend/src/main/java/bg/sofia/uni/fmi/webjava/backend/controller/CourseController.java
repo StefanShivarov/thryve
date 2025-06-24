@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.CourseResponseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.EntityModificationResponse;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CreateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.EntityModificationResponse;
 import bg.sofia.uni.fmi.webjava.backend.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

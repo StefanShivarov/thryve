@@ -1,8 +1,8 @@
 package bg.sofia.uni.fmi.webjava.backend.mapper;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.UpdateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.response.UserResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.CreateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
