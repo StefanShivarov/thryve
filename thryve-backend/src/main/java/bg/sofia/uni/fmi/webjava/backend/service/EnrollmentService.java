@@ -38,7 +38,8 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public Page<EnrollmentResponseDto> getEnrollmentsByCourseIdAndUserId(UUID courseId, UUID userId, Pageable pageable) {
+    public Page<EnrollmentResponseDto> getEnrollmentsByCourseIdAndUserId(UUID courseId, UUID userId,
+                                                                         Pageable pageable) {
         return enrollmentRepository.findEnrollmentByCourseIdAndUserId(courseId, userId, pageable)
             .map(enrollmentDtoMapper::mapToResponseDto);
     }
@@ -56,11 +57,14 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public EnrollmentResponseDto getEnrollmentById(UUID id) {
-        Enrollment enrollment = enrollmentRepository.findById(id)
+    protected Enrollment getEnrollmentEntityById(UUID id) {
+        return enrollmentRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(format(ENROLLMENT_NOT_FOUND_ERROR_MESSAGE, id)));
+    }
 
-        return enrollmentDtoMapper.mapToResponseDto(enrollment);
+    @Transactional
+    public EnrollmentResponseDto getEnrollmentById(UUID id) {
+        return enrollmentDtoMapper.mapToResponseDto(getEnrollmentEntityById(id));
     }
 
     @Transactional
@@ -78,9 +82,7 @@ public class EnrollmentService {
 
     @Transactional
     public EnrollmentResponseDto updateEnrollmentById(UUID id, UpdateEnrollmentDto updateEnrollmentDto) {
-        Enrollment enrollment = enrollmentRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(format(ENROLLMENT_NOT_FOUND_ERROR_MESSAGE, id)));
-
+        Enrollment enrollment = getEnrollmentEntityById(id);
         enrollmentDtoMapper.updateEnrollmentFromDto(updateEnrollmentDto, enrollment);
         return enrollmentDtoMapper.mapToResponseDto(enrollmentRepository.save(enrollment));
     }
