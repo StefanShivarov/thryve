@@ -78,6 +78,15 @@ public class GlobalExceptionHandler {
             .body(new MessageResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(EnrollmentRequestAlreadyFinalizedException.class)
+    public ResponseEntity<MessageResponse> handleExceptionsWithBadRequest(
+        EnrollmentRequestAlreadyFinalizedException ex
+    ) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new MessageResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageResponse> handleUnexpectedException(Exception ex) {
         return ResponseEntity
