@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CreateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.course.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseCreateDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.EntityModificationResponse;
 import bg.sofia.uni.fmi.webjava.backend.service.CourseService;
@@ -53,21 +53,21 @@ public class CourseController {
     }
 
     @PostMapping(value = {"", "/"})
-    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CreateCourseDto createCourseDto) {
+    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CourseCreateDto courseCreateDto) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(courseService.createCourse(createCourseDto));
+            .body(courseService.createCourse(courseCreateDto));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> updateCourseById(
         @PathVariable UUID id,
-        @RequestBody UpdateCourseDto updateCourseDto
+        @RequestBody CourseUpdateDto courseUpdateDto
     ) {
         return ResponseEntity.ok(
             new EntityModificationResponse<>(
                 COURSE_UPDATED_MESSAGE,
-                courseService.updateCourseById(id, updateCourseDto))
+                courseService.updateCourseById(id, courseUpdateDto))
         );
     }
 

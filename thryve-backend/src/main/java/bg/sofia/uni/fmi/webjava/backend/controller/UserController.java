@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.user.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserCreateDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.EntityModificationResponse;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.service.UserService;
@@ -54,19 +54,19 @@ public class UserController {
     }
 
     @PostMapping(value = {"", "/"})
-    public ResponseEntity<EntityModificationResponse<UserResponseDto>> registerUser(@RequestBody @Valid CreateUserDto createUserDto) {
+    public ResponseEntity<EntityModificationResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserCreateDto userCreateDto) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(new EntityModificationResponse<>(CREATED_USER_MESSAGE, userService.createUser(createUserDto)));
+            .body(new EntityModificationResponse<>(CREATED_USER_MESSAGE, userService.createUser(userCreateDto)));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<UserResponseDto>> updateUserById(
         @PathVariable UUID id,
-        @RequestBody @Valid UpdateUserDto updateUserDto
+        @RequestBody @Valid UserUpdateDto userUpdateDto
     ) {
         return ResponseEntity.ok(
-            new EntityModificationResponse<>(UPDATED_USER_MESSAGE, userService.updateUserById(id, updateUserDto))
+            new EntityModificationResponse<>(UPDATED_USER_MESSAGE, userService.updateUserById(id, userUpdateDto))
         );
     }
 

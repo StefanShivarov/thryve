@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class UpdateEnrollmentDto {
+public class EnrollmentUpdateDto {
 
     private EnrollmentType enrollmentType;
 

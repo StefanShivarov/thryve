@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.webjava.backend.service;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.user.CreateUserDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UpdateUserDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserCreateDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityAlreadyExistsException;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
@@ -51,29 +51,29 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto createUser(CreateUserDto createUserDto) {
-        if (userRepository.findByEmail(createUserDto.getEmail()).isPresent()) {
+    public UserResponseDto createUser(UserCreateDto userCreateDto) {
+        if (userRepository.findByEmail(userCreateDto.getEmail()).isPresent()) {
             throw new EntityAlreadyExistsException(
-                    format(USER_WITH_EMAIL_ALREADY_EXISTS_ERROR_MESSAGE, createUserDto.getEmail())
+                    format(USER_WITH_EMAIL_ALREADY_EXISTS_ERROR_MESSAGE, userCreateDto.getEmail())
             );
         }
 
-        if (userRepository.findByUsername(createUserDto.getUsername()).isPresent()) {
+        if (userRepository.findByUsername(userCreateDto.getUsername()).isPresent()) {
             throw new EntityAlreadyExistsException(
-                    format(USER_WITH_USERNAME_ALREADY_EXISTS_ERROR_MESSAGE, createUserDto.getUsername())
+                    format(USER_WITH_USERNAME_ALREADY_EXISTS_ERROR_MESSAGE, userCreateDto.getUsername())
             );
         }
 
-        User userToCreate = userDtoMapper.mapDtoToUser(createUserDto);
-        userToCreate.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
+        User userToCreate = userDtoMapper.mapDtoToUser(userCreateDto);
+        userToCreate.setPassword(passwordEncoder.encode(userCreateDto.getPassword()));
         userToCreate.setRole(UserRole.STANDARD);
         return userDtoMapper.mapUserToResponseDto(userRepository.save(userToCreate));
     }
 
     @Transactional
-    public UserResponseDto updateUserById(UUID id, UpdateUserDto updateUserDto) {
+    public UserResponseDto updateUserById(UUID id, UserUpdateDto userUpdateDto) {
         User user = getUserEntityById(id);
-        userDtoMapper.updateUserFromDto(updateUserDto, user);
+        userDtoMapper.updateUserFromDto(userUpdateDto, user);
         return userDtoMapper.mapUserToResponseDto(userRepository.save(user));
     }
 

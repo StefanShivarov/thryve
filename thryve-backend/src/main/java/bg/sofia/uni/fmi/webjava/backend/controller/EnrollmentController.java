@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
 import bg.sofia.uni.fmi.webjava.backend.model.dto.EntityModificationResponse;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.CreateEnrollmentDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentCreateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.UpdateEnrollmentDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.service.EnrollmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -65,16 +65,16 @@ public class EnrollmentController {
     }
 
     @PostMapping(value = {"", "/"})
-    public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> createEnrollment(@RequestBody @Valid CreateEnrollmentDto createEnrollmentDto) {
+    public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> createEnrollment(@RequestBody @Valid EnrollmentCreateDto enrollmentCreateDto) {
         return ResponseEntity.ok(
-            new EntityModificationResponse<>(ENROLLMENT_CREATED_MESSAGE, enrollmentService.createEnrollment(createEnrollmentDto))
+            new EntityModificationResponse<>(ENROLLMENT_CREATED_MESSAGE, enrollmentService.createEnrollment(enrollmentCreateDto))
         );
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> updateEnrollmentById(@PathVariable UUID id, @RequestBody @Valid UpdateEnrollmentDto updateEnrollmentDto) {
+    public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> updateEnrollmentById(@PathVariable UUID id, @RequestBody @Valid EnrollmentUpdateDto enrollmentUpdateDto) {
         return ResponseEntity.ok(
-            new EntityModificationResponse<>(ENROLLMENT_UPDATED_MESSAGE, enrollmentService.updateEnrollmentById(id, updateEnrollmentDto))
+            new EntityModificationResponse<>(ENROLLMENT_UPDATED_MESSAGE, enrollmentService.updateEnrollmentById(id, enrollmentUpdateDto))
         );
     }
 

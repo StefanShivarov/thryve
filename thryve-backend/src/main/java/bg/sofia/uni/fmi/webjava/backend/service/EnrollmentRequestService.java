@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.webjava.backend.exception.EnrollmentRequestAlreadyFinali
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityAlreadyExistsException;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.EnrollmentRequestDtoMapper;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.CreateEnrollmentDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentCreateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentRequestResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
@@ -81,10 +81,10 @@ public class EnrollmentRequestService {
         }
         request.setState(EnrollmentState.ACCEPTED);
 
-        CreateEnrollmentDto createEnrollmentDto = new CreateEnrollmentDto();
-        createEnrollmentDto.setCourseId(request.getCourse().getId());
-        createEnrollmentDto.setUserId(request.getUser().getId());
-        enrollmentService.createEnrollment(createEnrollmentDto);
+        EnrollmentCreateDto enrollmentCreateDto = new EnrollmentCreateDto();
+        enrollmentCreateDto.setCourseId(request.getCourse().getId());
+        enrollmentCreateDto.setUserId(request.getUser().getId());
+        enrollmentService.createEnrollment(enrollmentCreateDto);
 
         return enrollmentRequestDtoMapper.mapToResponseDto(enrollmentRequestRepository.save(request));
     }

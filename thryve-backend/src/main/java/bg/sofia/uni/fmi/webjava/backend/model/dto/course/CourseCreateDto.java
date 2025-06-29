@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateCourseDto {
+public class CourseCreateDto {
 
     @NotBlank
     @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters long!")

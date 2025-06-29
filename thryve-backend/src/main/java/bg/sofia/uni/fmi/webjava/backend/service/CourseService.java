@@ -2,8 +2,8 @@ package bg.sofia.uni.fmi.webjava.backend.service;
 
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.CourseDtoMapper;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CreateCourseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.course.UpdateCourseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseCreateDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.repository.CourseRepository;
@@ -44,15 +44,15 @@ public class CourseService {
     }
 
     @Transactional
-    public CourseResponseDto createCourse(CreateCourseDto createCourseDto) {
-        Course course = courseDtoMapper.mapDtoToCourse(createCourseDto);
+    public CourseResponseDto createCourse(CourseCreateDto courseCreateDto) {
+        Course course = courseDtoMapper.mapDtoToCourse(courseCreateDto);
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }
 
     @Transactional
-    public CourseResponseDto updateCourseById(UUID id, UpdateCourseDto updateCourseDto) {
+    public CourseResponseDto updateCourseById(UUID id, CourseUpdateDto courseUpdateDto) {
         Course course = getCourseEntityById(id);
-        courseDtoMapper.updateCourseFromDto(updateCourseDto, course);
+        courseDtoMapper.updateCourseFromDto(courseUpdateDto, course);
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }
 

@@ -3,9 +3,9 @@ package bg.sofia.uni.fmi.webjava.backend.service;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityAlreadyExistsException;
 import bg.sofia.uni.fmi.webjava.backend.exception.EntityNotFoundException;
 import bg.sofia.uni.fmi.webjava.backend.mapper.EnrollmentDtoMapper;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.CreateEnrollmentDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentCreateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
-import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.UpdateEnrollmentDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentUpdateDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
@@ -68,7 +68,7 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public EnrollmentResponseDto createEnrollment(CreateEnrollmentDto dto) {
+    public EnrollmentResponseDto createEnrollment(EnrollmentCreateDto dto) {
         Enrollment enrollment = enrollmentDtoMapper.mapDtoToEnrollment(dto);
         if (!getEnrollmentsByCourseIdAndUserId(dto.getCourseId(), dto.getUserId(), Pageable.unpaged()).isEmpty()) {
             throw new EntityAlreadyExistsException("Enrollment with userId %s and courseId %s already exists!");
@@ -81,9 +81,9 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public EnrollmentResponseDto updateEnrollmentById(UUID id, UpdateEnrollmentDto updateEnrollmentDto) {
+    public EnrollmentResponseDto updateEnrollmentById(UUID id, EnrollmentUpdateDto enrollmentUpdateDto) {
         Enrollment enrollment = getEnrollmentEntityById(id);
-        enrollmentDtoMapper.updateEnrollmentFromDto(updateEnrollmentDto, enrollment);
+        enrollmentDtoMapper.updateEnrollmentFromDto(enrollmentUpdateDto, enrollment);
         return enrollmentDtoMapper.mapToResponseDto(enrollmentRepository.save(enrollment));
     }
 
