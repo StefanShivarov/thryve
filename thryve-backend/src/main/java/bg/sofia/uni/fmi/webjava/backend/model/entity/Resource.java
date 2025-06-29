@@ -23,9 +23,6 @@ public class Resource extends BaseEntity {
     @Column(name = "url", nullable = false)
     private String url;
 
-    @Column(name = "uploaded_at", nullable = false)
-    private LocalDateTime uploadedAt;
-
     @ManyToOne
     private Course course;
 

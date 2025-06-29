@@ -19,9 +19,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Enrollment extends BaseEntity {
 
-    @Column(name = "enrolled_at", nullable = false)
-    private LocalDateTime enrolledAt = LocalDateTime.now();
-
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private EnrollmentType enrollmentType;

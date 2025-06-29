@@ -21,12 +21,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class EnrollmentRequest extends BaseEntity {
 
-    @Column(name = "requested_at", nullable = false)
-    private LocalDateTime requestedAt;
-
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
-    private EnrollmentState state;
+    private EnrollmentState state = EnrollmentState.PENDING;
 
     @ManyToOne
     private User user;

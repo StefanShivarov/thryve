@@ -23,9 +23,6 @@ public class Notification extends BaseEntity {
     @Column(name = "text_content", columnDefinition = "TEXT", nullable = false)
     private String textContent;
 
-    @Column(name = "posted_at", nullable = false)
-    private LocalDateTime postedAt;
-
     @ManyToOne
     private User sender;
 

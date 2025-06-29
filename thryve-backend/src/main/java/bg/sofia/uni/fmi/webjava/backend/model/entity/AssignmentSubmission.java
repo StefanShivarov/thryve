@@ -20,9 +20,6 @@ public class AssignmentSubmission extends BaseEntity {
     @Column(name = "submission_url", unique = true)
     private String submissionUrl;
 
-    @Column(name = "submitted_at")
-    private LocalDateTime submittedAt;
-
     @Column(name = "feedback")
     private String feedback;
 
