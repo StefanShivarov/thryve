@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.webjava.backend.model.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
@@ -10,7 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "assignments")
@@ -31,7 +33,7 @@ public class Assignment extends BaseEntity {
     @ManyToOne
     private Course course;
 
-    @OneToMany(mappedBy = "assignment")
-    private Set<AssignmentSubmission> submissions;
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<AssignmentSubmission> submissions = new ArrayList<>();
 
 }

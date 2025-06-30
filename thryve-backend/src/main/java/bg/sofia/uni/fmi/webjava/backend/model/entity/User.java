@@ -12,8 +12,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -42,6 +42,6 @@ public class User extends BaseEntity {
     private UserRole role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private Set<Enrollment> enrollments = new HashSet<>();
+    private List<Enrollment> enrollments = new ArrayList<>();
 
 }
