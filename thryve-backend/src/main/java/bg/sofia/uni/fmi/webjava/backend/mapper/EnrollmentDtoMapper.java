@@ -17,6 +17,7 @@ public interface EnrollmentDtoMapper {
     EnrollmentResponseDto mapToResponseDto(Enrollment enrollment);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEnrollmentFromDto(EnrollmentUpdateDto enrollmentUpdateDto, @MappingTarget Enrollment enrollment);
+    void updateEnrollmentFromDto(EnrollmentUpdateDto enrollmentUpdateDto,
+                                 @MappingTarget Enrollment enrollment);
 
 }

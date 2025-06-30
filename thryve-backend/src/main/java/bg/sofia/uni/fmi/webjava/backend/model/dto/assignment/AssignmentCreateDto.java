@@ -1,15 +1,12 @@
 package bg.sofia.uni.fmi.webjava.backend.model.dto.assignment;
 
-import bg.sofia.uni.fmi.webjava.backend.config.JacksonObjectMapperConfiguration;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
