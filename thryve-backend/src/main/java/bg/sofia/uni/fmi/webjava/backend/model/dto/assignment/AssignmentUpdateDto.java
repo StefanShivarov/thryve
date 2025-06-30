@@ -1,0 +1,24 @@
+package bg.sofia.uni.fmi.webjava.backend.model.dto.assignment;
+
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+public class AssignmentUpdateDto {
+
+    @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters long!")
+    private String title;
+
+    @Size(min = 10, max = 1000, message = "Description must be between 10 and 1000 characters long!")
+    private String description;
+
+    private LocalDateTime deadline;
+
+    private UUID courseId;
+
+}
