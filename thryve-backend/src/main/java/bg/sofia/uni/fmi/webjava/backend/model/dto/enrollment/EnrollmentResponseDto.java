@@ -16,6 +16,5 @@ public class EnrollmentResponseDto {
     private CoursePreviewDto course;
     private UserResponseDto user;
     private EnrollmentType enrollmentType;
-    private String enrolledAt;
 
 }
