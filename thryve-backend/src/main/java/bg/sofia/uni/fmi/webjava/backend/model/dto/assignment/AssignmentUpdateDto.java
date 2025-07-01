@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.webjava.backend.model.dto.assignment;
 
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,9 @@ public class AssignmentUpdateDto {
     private String description;
 
     private LocalDateTime deadline;
+
+    @Positive(message = "Total points must be a positive number!")
+    private double totalPoints;
 
     private UUID courseId;
 

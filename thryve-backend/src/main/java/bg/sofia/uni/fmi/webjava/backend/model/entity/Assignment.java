@@ -30,6 +30,9 @@ public class Assignment extends BaseEntity {
     @Column(name = "deadline")
     private LocalDateTime deadline;
 
+    @Column(name = "total_points", nullable = false)
+    private double totalPoints;
+
     @ManyToOne
     private Course course;
 

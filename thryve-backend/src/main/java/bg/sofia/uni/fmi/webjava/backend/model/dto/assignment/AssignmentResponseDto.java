@@ -15,6 +15,7 @@ public class AssignmentResponseDto {
     private String title;
     private String description;
     private LocalDateTime deadline;
+    private double totalPoints;
     private CoursePreviewDto course;
 
 }
