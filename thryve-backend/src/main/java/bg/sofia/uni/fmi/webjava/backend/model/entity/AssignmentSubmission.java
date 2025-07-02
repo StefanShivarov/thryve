@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "assignment_submissions")
 @Data
@@ -17,11 +15,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AssignmentSubmission extends BaseEntity {
 
-    @Column(name = "submission_url", unique = true)
+    @Column(name = "submission_url", unique = true, nullable = false)
     private String submissionUrl;
 
-    @Column(name = "feedback")
+    @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback;
+
+    @Column(name = "comment", columnDefinition = "TEXT")
+    private String comment;
 
     @Column(name = "grade")
     private double grade;
@@ -30,6 +31,6 @@ public class AssignmentSubmission extends BaseEntity {
     private Assignment assignment;
 
     @ManyToOne
-    private User student;
+    private User user;
 
 }
