@@ -15,6 +15,6 @@ public class SectionUpdateDto {
     private String textContent;
 
     @PositiveOrZero(message = "Order number must be a non-negative integer!")
-    private int orderNumber;
+    private Integer orderNumber;
 
 }

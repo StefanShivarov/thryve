@@ -6,11 +6,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 public class SectionResponseDto {
 
+    private UUID id;
     private String title;
     private String textContent;
     private int orderNumber;
