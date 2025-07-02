@@ -64,7 +64,7 @@ public class SectionController {
         );
     }
 
-    @PatchMapping("/api/sections/{id}")
+    @PatchMapping("/sections/{id}")
     public ResponseEntity<EntityModificationResponse<SectionResponseDto>> updateSectionById(
         @PathVariable UUID id,
         @RequestBody @Valid SectionUpdateDto sectionUpdateDto) {
@@ -74,7 +74,7 @@ public class SectionController {
             );
     }
 
-    @DeleteMapping("/api/sections/{id}")
+    @DeleteMapping("/sections/{id}")
     public ResponseEntity<EntityModificationResponse<SectionResponseDto>> deleteSectionById(@PathVariable UUID id) {
         return ResponseEntity.ok(
             new EntityModificationResponse<>(SECTION_DELETED_MESSAGE, sectionService.deleteSectionById(id))
