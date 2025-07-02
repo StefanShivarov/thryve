@@ -4,18 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class UserCreateDto {
-
-    @NotBlank
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters long!")
-    private String username;
+public class UserLoginDto {
 
     @NotBlank
     @Email(message = "Invalid email format provided!")
@@ -28,13 +22,5 @@ public class UserCreateDto {
         message = "Password must contain at least one uppercase letter, one lowercase letter, and one digit"
     )
     private String password;
-
-    @NotBlank
-    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters long!")
-    private String firstName;
-
-    @NotBlank
-    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters long!")
-    private String lastName;
 
 }
