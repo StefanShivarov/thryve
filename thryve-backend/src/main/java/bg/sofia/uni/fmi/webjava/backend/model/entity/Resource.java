@@ -24,6 +24,6 @@ public class Resource extends BaseEntity {
     private String url;
 
     @ManyToOne
-    private Course course;
+    private Section section;
 
 }
