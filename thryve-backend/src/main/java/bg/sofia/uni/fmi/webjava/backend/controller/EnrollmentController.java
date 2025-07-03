@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,6 +36,7 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @GetMapping(value = {"", "/"})
     public ResponseEntity<Page<EnrollmentResponseDto>> getEnrollmentsByCourseId(
         @RequestParam(required = false) UUID userId,
@@ -59,11 +61,13 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.getAllEnrollments(pageable));
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<EnrollmentResponseDto> getEnrollmentById(@PathVariable UUID id) {
         return ResponseEntity.ok(enrollmentService.getEnrollmentById(id));
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping(value = {"", "/"})
     public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> createEnrollment(@RequestBody @Valid EnrollmentCreateDto enrollmentCreateDto) {
         return ResponseEntity.ok(
@@ -71,6 +75,7 @@ public class EnrollmentController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> updateEnrollmentById(@PathVariable UUID id, @RequestBody @Valid EnrollmentUpdateDto enrollmentUpdateDto) {
         return ResponseEntity.ok(
@@ -78,6 +83,7 @@ public class EnrollmentController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<EnrollmentResponseDto>> deleteEnrollmentById(@PathVariable UUID id) {
         return ResponseEntity.ok(

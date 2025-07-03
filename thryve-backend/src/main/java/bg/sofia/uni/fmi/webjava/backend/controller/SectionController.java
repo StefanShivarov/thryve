@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,6 +36,7 @@ public class SectionController {
 
     private final SectionService sectionService;
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/courses/{courseId}/sections")
     public ResponseEntity<Page<SectionResponseDto>> getSectionsByCourseId(
         @PathVariable("courseId") UUID courseId,
@@ -48,11 +50,13 @@ public class SectionController {
         return ResponseEntity.ok(sectionService.getSectionsByCourseId(courseId, pageable));
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/sections/{id}")
     public ResponseEntity<SectionResponseDto> getSectionById(@PathVariable UUID id) {
         return ResponseEntity.ok(sectionService.getSectionById(id));
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping("/courses/{courseId}/sections")
     public ResponseEntity<EntityModificationResponse<SectionResponseDto>> createSectionForCourse(
         @PathVariable("courseId") UUID courseId,
@@ -64,6 +68,7 @@ public class SectionController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/sections/{id}")
     public ResponseEntity<EntityModificationResponse<SectionResponseDto>> updateSectionById(
         @PathVariable UUID id,
@@ -74,6 +79,7 @@ public class SectionController {
             );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @DeleteMapping("/sections/{id}")
     public ResponseEntity<EntityModificationResponse<SectionResponseDto>> deleteSectionById(@PathVariable UUID id) {
         return ResponseEntity.ok(

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,6 +37,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = {"", "/"})
     public ResponseEntity<Page<UserResponseDto>> getAllUsers(
         @RequestParam(defaultValue = "0") int pageNumber,
@@ -48,6 +50,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getUserById(id));
@@ -60,6 +63,7 @@ public class UserController {
             .body(new EntityModificationResponse<>(CREATED_USER_MESSAGE, userService.createUser(userCreateDto)));
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<UserResponseDto>> updateUserById(
         @PathVariable UUID id,
@@ -70,6 +74,7 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<UserResponseDto>> deleteUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(

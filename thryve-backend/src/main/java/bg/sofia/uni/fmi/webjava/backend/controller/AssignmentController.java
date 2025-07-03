@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,6 +36,7 @@ public class AssignmentController {
 
     private final AssignmentService assignmentService;
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/courses/{courseId}/assignments")
     public ResponseEntity<Page<AssignmentResponseDto>> getAssignmentsByCourseId(
         @PathVariable("courseId") UUID courseId,
@@ -51,6 +53,7 @@ public class AssignmentController {
         return ResponseEntity.ok(enrollmentRequests);
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping("/courses/{courseId}/assignments")
     public ResponseEntity<EntityModificationResponse<AssignmentResponseDto>> createAssignment(
         @PathVariable("courseId") UUID courseId,
@@ -62,6 +65,7 @@ public class AssignmentController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/assignments/{id}")
     public ResponseEntity<EntityModificationResponse<AssignmentResponseDto>> updateAssignmentById(
         @PathVariable UUID id,
@@ -73,6 +77,7 @@ public class AssignmentController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @DeleteMapping("/assignments/{id}")
     public ResponseEntity<EntityModificationResponse<AssignmentResponseDto>> deleteAssignmentById(@PathVariable UUID id) {
         AssignmentResponseDto response = assignmentService.deleteAssignmentById(id);
