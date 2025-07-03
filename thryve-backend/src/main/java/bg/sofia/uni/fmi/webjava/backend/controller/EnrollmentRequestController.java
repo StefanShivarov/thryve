@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,7 @@ public class EnrollmentRequestController {
 
     private final EnrollmentRequestService enrollmentRequestService;
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @GetMapping("/courses/{courseId}/enrollment-requests")
     public ResponseEntity<Page<EnrollmentRequestResponseDto>> getEnrollmentRequestsByCourseId(
         @PathVariable("courseId") UUID courseId,
@@ -43,6 +45,7 @@ public class EnrollmentRequestController {
         return ResponseEntity.ok(enrollmentRequests);
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/users/{userId}/enrollment-requests")
     public ResponseEntity<Page<EnrollmentRequestResponseDto>> getEnrollmentRequestsByUserId(
         @PathVariable("userId") UUID courseId,
@@ -56,6 +59,7 @@ public class EnrollmentRequestController {
         return ResponseEntity.ok(enrollmentRequests);
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping("/courses/{courseId}/enrollment-requests")
     public ResponseEntity<EntityModificationResponse<EnrollmentRequestResponseDto>> createEnrollmentRequest(
         @PathVariable("courseId") UUID courseId,
@@ -67,6 +71,7 @@ public class EnrollmentRequestController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping("/enrollment-requests/{id}/accept")
     public ResponseEntity<EntityModificationResponse<EnrollmentRequestResponseDto>> updateEnrollmentRequestById(
         @PathVariable UUID id
@@ -77,6 +82,7 @@ public class EnrollmentRequestController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping("/enrollment-requests/{id}/reject")
     public ResponseEntity<EntityModificationResponse<EnrollmentRequestResponseDto>> rejectEnrollmentRequestById(
         @PathVariable UUID id
@@ -87,6 +93,7 @@ public class EnrollmentRequestController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @DeleteMapping("/enrollment-requests/{id}")
     public ResponseEntity<EntityModificationResponse<EnrollmentRequestResponseDto>> deleteEnrollmentRequestById(
         @PathVariable UUID id

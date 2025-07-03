@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,6 +37,7 @@ public class AssignmentSubmissionController {
 
     private final AssignmentSubmissionService assignmentSubmissionService;
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @GetMapping("/assignments/{assignmentId}/submissions")
     public ResponseEntity<Page<AssignmentSubmissionResponseDto>> getSubmissionsByAssignmentId(
         @PathVariable("assignmentId") UUID assignmentId,
@@ -52,11 +54,13 @@ public class AssignmentSubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/submissions/{id}")
     public ResponseEntity<AssignmentSubmissionResponseDto> getSubmissionById(@PathVariable UUID id) {
         return ResponseEntity.ok(assignmentSubmissionService.getAssignmentSubmissionById(id));
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @PostMapping("/assignments/{assignmentId}/submissions")
     public ResponseEntity<EntityModificationResponse<AssignmentSubmissionResponseDto>> createSubmission(
         @PathVariable("assignmentId") UUID assignmentId,
@@ -68,6 +72,7 @@ public class AssignmentSubmissionController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @DeleteMapping("/submissions/{id}")
     public ResponseEntity<EntityModificationResponse<AssignmentSubmissionResponseDto>> deleteSubmissionById(
         @PathVariable UUID id
@@ -78,6 +83,7 @@ public class AssignmentSubmissionController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @PatchMapping("/submissions/{id}")
     public ResponseEntity<EntityModificationResponse<AssignmentSubmissionResponseDto>> updateSubmissionById(
         @PathVariable UUID id,
@@ -89,6 +95,7 @@ public class AssignmentSubmissionController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/submissions/{id}/grade")
     public ResponseEntity<EntityModificationResponse<AssignmentSubmissionResponseDto>> gradeSubmissionById(
         @PathVariable UUID id,

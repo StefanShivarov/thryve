@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,6 +36,7 @@ public class CourseController {
 
     private final CourseService courseService;
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping(value = {"", "/"})
     public ResponseEntity<Page<CourseResponseDto>> getAllCourses(
         @RequestParam(defaultValue = "0") int pageNumber,
@@ -47,11 +49,13 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getAllCourses(pageable));
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponseDto> getCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping(value = {"", "/"})
     public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CourseCreateDto courseCreateDto) {
         return ResponseEntity
@@ -59,6 +63,7 @@ public class CourseController {
             .body(courseService.createCourse(courseCreateDto));
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> updateCourseById(
         @PathVariable UUID id,
@@ -71,6 +76,7 @@ public class CourseController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> deleteCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(
