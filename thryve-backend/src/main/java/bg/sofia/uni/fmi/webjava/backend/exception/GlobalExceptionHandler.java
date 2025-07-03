@@ -3,8 +3,10 @@ package bg.sofia.uni.fmi.webjava.backend.exception;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.MessageResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +16,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -87,8 +90,17 @@ public class GlobalExceptionHandler {
             .body(new MessageResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<MessageResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(new MessageResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageResponse> handleUnexpectedException(Exception ex) {
+        log.error(ex.getClass().getName());
+        log.info("Error: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(new MessageResponse(UNEXPECTED_EXCEPTION_MESSAGE));
