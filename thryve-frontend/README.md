@@ -1,5 +1,4 @@
 # Thryve Frontend Documention
-A minimal React + Vite + TypeScript + Tailwind app wired to your Spring backend.
 
 ## Quick start
 
