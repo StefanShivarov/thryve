@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import AppHeader from "../components/AppHeader";
+import { hasAnyRole } from "../lib/auth";
 
 type Course = {
     id: number | string;
@@ -18,8 +20,11 @@ type Page<T> = { content: T[]; number: number; size: number; totalElements: numb
 type User = { id: string; email: string; username?: string; firstName?: string; lastName?: string };
 
 export default function CourseDetail() {
+    const canManage = hasAnyRole("CREATOR", "ADMIN");
     const { id } = useParams<{ id: string }>();
     const [tab, setTab] = useState<"overview" | "sections" | "assignments">("overview");
+    const [showEdit, setShowEdit] = useState(false);
+    const [edit, setEdit] = useState<Partial<Course>>({});
     const queryClient = useQueryClient();
 
     const courseQ = useQuery({
@@ -119,6 +124,24 @@ export default function CourseDetail() {
         },
     });
 
+    const updateMut = useMutation({
+        mutationFn: async (payload: Partial<Course>) => {
+            const body: any = {};
+            if (payload.title != null) body.title = payload.title;
+            if (payload.description != null) body.description = payload.description;
+            if (payload.category != null) body.category = payload.category;
+            if (payload.level != null) body.level = payload.level;
+            if (payload.imageUrl != null) body.imageUrl = payload.imageUrl;
+            const { data } = await api.patch(`/api/courses/${id}`, body);
+            return data?.data ?? data;
+        },
+        onSuccess: () => {
+            setShowEdit(false);
+            queryClient.invalidateQueries({ queryKey: ["course", id] });
+            queryClient.invalidateQueries({ queryKey: ["courses"] });
+        },
+    });
+
     const handleEnrollClick = () => enrollMutation.mutate();
 
     const gradients = [
@@ -127,14 +150,15 @@ export default function CourseDetail() {
         "from-emerald-500 via-teal-500 to-cyan-500",
         "from-amber-500 via-orange-500 to-red-500",
     ];
-    const gradient = gradients[
-        useMemo(() => {
-            const s = String(id ?? "0");
-            let sum = 0;
-            for (let i = 0; i < s.length; i++) sum += s.charCodeAt(i);
-            return sum % gradients.length;
-        }, [id])
-        ];
+    const gradient =
+        gradients[
+            useMemo(() => {
+                const s = String(id ?? "0");
+                let sum = 0;
+                for (let i = 0; i < s.length; i++) sum += s.charCodeAt(i);
+                return sum % gradients.length;
+            }, [id])
+            ];
 
     const Badge = ({ children }: { children: React.ReactNode }) => (
         <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">{children}</span>
@@ -166,174 +190,280 @@ export default function CourseDetail() {
     }
 
     return (
-        <div className="pb-10">
-            <div className="relative">
-                <div className={`h-40 w-full bg-gradient-to-br ${gradient}`} />
-                {course.imageUrl && (
-                    <img
-                        src={course.imageUrl}
-                        alt=""
-                        className="absolute inset-0 h-40 w-full object-cover opacity-25 mix-blend-multiply"
-                        onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                    />
-                )}
-                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.25)_90%)]" />
-                <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 text-white">
-                    <div className="mb-2 text-sm opacity-90">
-                        <Link to="/courses" className="underline underline-offset-2">← Back to Courses</Link>
+        <div className="min-h-screen bg-gray-50">
+            <AppHeader />
+            <div className="pb-10">
+                <div className="relative">
+                    <div className={`h-40 w-full bg-gradient-to-br ${gradient}`} />
+                    {course.imageUrl && (
+                        <img
+                            src={course.imageUrl}
+                            alt=""
+                            className="absolute inset-0 h-40 w-full object-cover opacity-25 mix-blend-multiply"
+                            onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                        />
+                    )}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.25)_90%)]" />
+                    <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 text-white">
+                        <div className="mb-2 text-sm opacity-90">
+                            <Link to="/courses" className="underline underline-offset-2">← Back to Courses</Link>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-2xl font-semibold">{course.title}</h1>
+                            {canManage && (
+                                <button
+                                    className="rounded-lg border bg-white/90 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white"
+                                    onClick={() => {
+                                        setEdit({
+                                            title: course.title,
+                                            description: course.description,
+                                            imageUrl: course.imageUrl,
+                                            category: course.category,
+                                            level: course.level,
+                                        });
+                                        setShowEdit(true);
+                                    }}
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {course.category && <Badge>{course.category}</Badge>}
+                            {course.level && <Badge>{course.level}</Badge>}
+                            <Badge>{lessonCount} lessons</Badge>
+                            <Badge>{assignmentCount} assignments</Badge>
+                        </div>
                     </div>
-                    <h1 className="text-2xl font-semibold">{course.title}</h1>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {course.category && <Badge>{course.category}</Badge>}
-                        {course.level && <Badge>{course.level}</Badge>}
-                        <Badge>{lessonCount} lessons</Badge>
-                        <Badge>{assignmentCount} assignments</Badge>
+                </div>
+
+                <div className="px-6">
+                    <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center gap-2">
+                            <Pill active={tab === "overview"} onClick={() => setTab("overview")}>Overview</Pill>
+                            <Pill active={tab === "sections"} onClick={() => setTab("sections")}>Sections</Pill>
+                            <Pill active={tab === "assignments"} onClick={() => setTab("assignments")}>Assignments</Pill>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">All Courses</Link>
+                            <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">Requests</Link>
+                            <button
+                                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90 disabled:opacity-60"
+                                onClick={handleEnrollClick}
+                                disabled={enrollMutation.isPending}
+                            >
+                                {enrollMutation.isPending ? "Requesting…" : "Request access"}
+                            </button>
+                        </div>
                     </div>
+
+                    {tab === "overview" && (
+                        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
+                            <div className="rounded-2xl border bg-white p-6">
+                                <h2 className="text-lg font-semibold">About this course</h2>
+                                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{course.description || "No description available."}</p>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="rounded-2xl border bg-white p-6">
+                                    <h3 className="text-sm font-semibold text-gray-700">Stats</h3>
+                                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                                        <div className="rounded-xl border bg-gray-50 p-3">
+                                            <div className="text-gray-500">Lessons</div>
+                                            <div className="text-lg font-semibold">{lessonCount}</div>
+                                        </div>
+                                        <div className="rounded-xl border bg-gray-50 p-3">
+                                            <div className="text-gray-500">Assignments</div>
+                                            <div className="text-lg font-semibold">{assignmentCount}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border bg-white p-6">
+                                    <h3 className="text-sm font-semibold text-gray-700">Actions</h3>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>Share</button>
+                                        <button
+                                            className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
+                                            onClick={handleEnrollClick}
+                                            disabled={enrollMutation.isPending}
+                                        >
+                                            {enrollMutation.isPending ? "Requesting…" : "Request access"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === "sections" && (
+                        <div className="mt-6 space-y-4">
+                            {sectionsQ.isLoading ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <div key={i} className="h-28 animate-pulse rounded-2xl border bg-white" />
+                                    ))}
+                                </div>
+                            ) : sections.length === 0 ? (
+                                <div className="rounded-2xl border bg-white p-10 text-center text-gray-600">No sections yet.</div>
+                            ) : (
+                                <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {sections.map((s) => (
+                                        <li key={s.id} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+                                            <div className="flex items-start justify-between p-4">
+                                                <div>
+                                                    <div className="text-sm text-gray-500">Lesson {s.orderNumber}</div>
+                                                    <div className="mt-1 text-base font-semibold">{s.title}</div>
+                                                </div>
+                                            </div>
+                                            {s.textContent && <div className="border-t px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">{s.textContent}</div>}
+                                            {s.resources && s.resources.length > 0 && (
+                                                <div className="border-t bg-gray-50 px-4 py-3">
+                                                    <div className="text-xs font-semibold text-gray-600">Resources</div>
+                                                    <ul className="mt-2 space-y-2">
+                                                        {s.resources.map((r) => (
+                                                            <li key={r.id}>
+                                                                <a href={r.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50">
+                                                                    <span className="truncate">{r.name}</span>
+                                                                </a>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
+
+                    {tab === "assignments" && (
+                        <div className="mt-6">
+                            {assignmentsQ.isLoading ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <div key={i} className="h-28 animate-pulse rounded-2xl border bg-white" />
+                                    ))}
+                                </div>
+                            ) : assignments.length === 0 ? (
+                                <div className="rounded-2xl border bg-white p-10 text-center text-gray-600">No assignments yet.</div>
+                            ) : (
+                                <ul className="space-y-3">
+                                    {assignments.map((a) => (
+                                        <li key={a.id} className="rounded-2xl border bg-white p-4 shadow-sm">
+                                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                                                <div>
+                                                    <div className="text-base font-semibold">{a.title}</div>
+                                                    {a.description && <div className="text-sm text-gray-600">{a.description}</div>}
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-2 md:mt-0">
+                                                    {a.totalPoints != null && <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">{a.totalPoints} pts</span>}
+                                                    {a.deadline && <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">Due {new Date(a.deadline).toLocaleString()}</span>}
+                                                    <button className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50" onClick={() => alert("TODO: open assignment")}>Open</button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="px-6">
-                <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-2">
-                        <Pill active={tab === "overview"} onClick={() => setTab("overview")}>Overview</Pill>
-                        <Pill active={tab === "sections"} onClick={() => setTab("sections")}>Sections</Pill>
-                        <Pill active={tab === "assignments"} onClick={() => setTab("assignments")}>Assignments</Pill>
-                    </div>
+            {showEdit && course && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Edit course</h2>
+                            <button onClick={() => setShowEdit(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
+                                Close
+                            </button>
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                        <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">All Courses</Link>
-                        <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">Requests</Link>
-                        <button
-                            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90 disabled:opacity-60"
-                            onClick={handleEnrollClick}
-                            disabled={enrollMutation.isPending}
+                        <form
+                            className="space-y-4"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const payload: Partial<Course> = {
+                                    title: edit.title ?? course.title,
+                                    description: edit.description ?? course.description,
+                                    category: edit.category ?? course.category,
+                                    level: edit.level ?? course.level,
+                                    imageUrl: edit.imageUrl ?? course.imageUrl,
+                                };
+                                updateMut.mutate(payload);
+                            }}
                         >
-                            {enrollMutation.isPending ? "Requesting…" : "Request access"}
-                        </button>
+                            <div>
+                                <label className="block text-sm font-medium">Title</label>
+                                <input
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={edit.title ?? ""}
+                                    onChange={(e) => setEdit((f) => ({ ...f, title: e.target.value }))}
+                                    placeholder={course.title}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Description</label>
+                                <textarea
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    rows={3}
+                                    value={edit.description ?? ""}
+                                    onChange={(e) => setEdit((f) => ({ ...f, description: e.target.value }))}
+                                    placeholder={course.description || ""}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="block text-sm font-medium">Category</label>
+                                    <input
+                                        className="mt-1 w-full rounded-lg border px-3 py-2"
+                                        value={edit.category ?? ""}
+                                        onChange={(e) => setEdit((f) => ({ ...f, category: e.target.value }))}
+                                        placeholder={course.category || ""}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">Level</label>
+                                    <input
+                                        className="mt-1 w-full rounded-lg border px-3 py-2"
+                                        value={edit.level ?? ""}
+                                        onChange={(e) => setEdit((f) => ({ ...f, level: e.target.value }))}
+                                        placeholder={String(course.level || "")}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Image URL</label>
+                                <input
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={edit.imageUrl ?? ""}
+                                    onChange={(e) => setEdit((f) => ({ ...f, imageUrl: e.target.value }))}
+                                    placeholder={course.imageUrl || ""}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button type="button" onClick={() => setShowEdit(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updateMut.isPending}
+                                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                                >
+                                    {updateMut.isPending ? "Saving…" : "Save"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                {tab === "overview" && (
-                    <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
-                        <div className="rounded-2xl border bg-white p-6">
-                            <h2 className="text-lg font-semibold">About this course</h2>
-                            <p className="mt-2 text-gray-700 whitespace-pre-wrap">{course.description || "No description available."}</p>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div className="rounded-2xl border bg-white p-6">
-                                <h3 className="text-sm font-semibold text-gray-700">Stats</h3>
-                                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                                    <div className="rounded-xl border bg-gray-50 p-3">
-                                        <div className="text-gray-500">Lessons</div>
-                                        <div className="text-lg font-semibold">{lessonCount}</div>
-                                    </div>
-                                    <div className="rounded-xl border bg-gray-50 p-3">
-                                        <div className="text-gray-500">Assignments</div>
-                                        <div className="text-lg font-semibold">{assignmentCount}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl border bg-white p-6">
-                                <h3 className="text-sm font-semibold text-gray-700">Actions</h3>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>Share</button>
-                                    <button
-                                        className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
-                                        onClick={handleEnrollClick}
-                                        disabled={enrollMutation.isPending}
-                                    >
-                                        {enrollMutation.isPending ? "Requesting…" : "Request access"}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {tab === "sections" && (
-                    <div className="mt-6 space-y-4">
-                        {sectionsQ.isLoading ? (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="h-28 animate-pulse rounded-2xl border bg-white" />
-                                ))}
-                            </div>
-                        ) : sections.length === 0 ? (
-                            <div className="rounded-2xl border bg-white p-10 text-center text-gray-600">No sections yet.</div>
-                        ) : (
-                            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {sections.map((s) => (
-                                    <li key={s.id} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-                                        <div className="flex items-start justify-between p-4">
-                                            <div>
-                                                <div className="text-sm text-gray-500">Lesson {s.orderNumber}</div>
-                                                <div className="mt-1 text-base font-semibold">{s.title}</div>
-                                            </div>
-                                        </div>
-                                        {s.textContent && (
-                                            <div className="border-t px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">{s.textContent}</div>
-                                        )}
-                                        {s.resources && s.resources.length > 0 && (
-                                            <div className="border-t bg-gray-50 px-4 py-3">
-                                                <div className="text-xs font-semibold text-gray-600">Resources</div>
-                                                <ul className="mt-2 space-y-2">
-                                                    {s.resources.map((r) => (
-                                                        <li key={r.id}>
-                                                            <a href={r.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50">
-                                                                <span className="truncate">{r.name}</span>
-                                                            </a>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                )}
-
-                {tab === "assignments" && (
-                    <div className="mt-6">
-                        {assignmentsQ.isLoading ? (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="h-28 animate-pulse rounded-2xl border bg-white" />
-                                ))}
-                            </div>
-                        ) : assignments.length === 0 ? (
-                            <div className="rounded-2xl border bg-white p-10 text-center text-gray-600">No assignments yet.</div>
-                        ) : (
-                            <ul className="space-y-3">
-                                {assignments.map((a) => (
-                                    <li key={a.id} className="rounded-2xl border bg-white p-4 shadow-sm">
-                                        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                                            <div>
-                                                <div className="text-base font-semibold">{a.title}</div>
-                                                {a.description && <div className="text-sm text-gray-600">{a.description}</div>}
-                                            </div>
-                                            <div className="mt-2 flex items-center gap-2 md:mt-0">
-                                                {a.totalPoints != null && (
-                                                    <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">{a.totalPoints} pts</span>
-                                                )}
-                                                {a.deadline && (
-                                                    <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">Due {new Date(a.deadline).toLocaleString()}</span>
-                                                )}
-                                                <button className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50" onClick={() => alert("TODO: open assignment")}>Open</button>
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                )}
-            </div>
+            )}
         </div>
     );
 }

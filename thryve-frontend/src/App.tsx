@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CourseEnrollmentRequests from "./pages/CourseEnrollmentRequests";
 import Logout from "./pages/Logout";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 
 export default function App() {
     return (
@@ -20,7 +21,8 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/courses" element={<CoursesList />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
-                <Route path="/courses/:id/requests" element={<CourseEnrollmentRequests />} /> {/* new */}
+                <Route path="/courses/:id/requests" element={<CourseEnrollmentRequests />} />
+                <Route path="/profile" element={<Profile />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

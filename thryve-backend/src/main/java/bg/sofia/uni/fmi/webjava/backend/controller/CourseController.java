@@ -49,13 +49,13 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getAllCourses(pageable));
     }
 
-    //@PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponseDto> getCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
-    //@PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping(value = {"", "/"})
     public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CourseCreateDto courseCreateDto) {
         return ResponseEntity
@@ -63,7 +63,7 @@ public class CourseController {
             .body(courseService.createCourse(courseCreateDto));
     }
 
-    //@PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> updateCourseById(
         @PathVariable UUID id,
@@ -76,7 +76,7 @@ public class CourseController {
         );
     }
 
-    //@PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> deleteCourseById(@PathVariable UUID id) {
         return ResponseEntity.ok(

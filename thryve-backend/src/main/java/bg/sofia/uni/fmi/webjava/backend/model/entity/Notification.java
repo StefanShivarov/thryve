@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "notifications")
 @Data
@@ -20,13 +18,15 @@ public class Notification extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "text_content", columnDefinition = "TEXT", nullable = false)
-    private String textContent;
+    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
+    private String message;
+
+    @Column(name = "read", nullable = false, columnDefinition = "boolean default false")
+    private boolean read = false;
 
     @ManyToOne
     private User sender;
 
     @ManyToOne
     private Course course;
-
 }
