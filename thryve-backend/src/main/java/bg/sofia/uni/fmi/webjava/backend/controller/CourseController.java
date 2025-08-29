@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -57,22 +58,26 @@ public class CourseController {
 
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PostMapping(value = {"", "/"})
-    public ResponseEntity<CourseResponseDto> createCourse(@RequestBody @Valid CourseCreateDto courseCreateDto) {
+    public ResponseEntity<CourseResponseDto> createCourse(
+        @RequestBody @Valid CourseCreateDto courseCreateDto,
+        org.springframework.security.core.Authentication authentication
+    ) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(courseService.createCourse(courseCreateDto));
+            .body(courseService.createCourse(courseCreateDto, authentication.getName()));
     }
 
     @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<EntityModificationResponse<CourseResponseDto>> updateCourseById(
         @PathVariable UUID id,
-        @RequestBody CourseUpdateDto courseUpdateDto
+        @RequestBody @Valid  CourseUpdateDto courseUpdateDto,
+        Authentication authentication
     ) {
         return ResponseEntity.ok(
             new EntityModificationResponse<>(
                 COURSE_UPDATED_MESSAGE,
-                courseService.updateCourseById(id, courseUpdateDto))
+                courseService.updateCourseById(id, courseUpdateDto,authentication.getName()))
         );
     }
 

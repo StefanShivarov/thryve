@@ -12,9 +12,5 @@ public class CourseUpdateDto {
 
     private String description;
 
-    @Pattern(
-        regexp = "https?://.*\\.(?:png|jpe?g|gif|bmp|webp|svg|tiff?)(\\?.*)?$\n",
-        message = "Invalid image URL!"
-    )
     private String imageUrl;
 }

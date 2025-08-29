@@ -1,8 +1,12 @@
 package bg.sofia.uni.fmi.webjava.backend.model.dto.course;
 
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Assignment;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Notification;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -13,8 +17,5 @@ public class CourseResponseDto {
     private String title;
     private String description;
     private String imageUrl;
-//    private Set<Enrollment> enrollments;
-//    private Set<Assignment> assignments;
-//    private Set<Notification> notifications;
 
 }

@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,26 +23,44 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<Page<NotificationResponseDto>> getMyNotifications(
+        Authentication auth,
         @RequestParam(defaultValue = "0") int pageNumber,
-        @RequestParam(defaultValue = "10") int pageSize
+        @RequestParam(defaultValue = "10") int pageSize,
+        @RequestParam(defaultValue = "postedAt") String sortBy,
+        @RequestParam(defaultValue = "DESC") String direction
     ) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        return ResponseEntity.ok(notificationService.getMyNotifications(pageable));
+        Sort.Direction dir = Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.DESC);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(dir, sortBy));
+        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName(), pageable));
+    }
+
+    @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
+    @GetMapping("/me/unread-count")
+    public ResponseEntity<Long> getMyUnreadCount(Authentication auth) {
+        return ResponseEntity.ok(notificationService.getMyUnreadCount(auth.getName()));
+    }
+
+    @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
+    @PostMapping("/{id}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable UUID id, Authentication auth) {
+        notificationService.markAsRead(id, auth.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> deleteMyNotification(@PathVariable UUID id) {
-        notificationService.deleteMyNotification(id);
-        return ResponseEntity.ok(new MessageResponse("Notification deleted successfully!"));
+    public ResponseEntity<Void> deleteOne(@PathVariable UUID id, Authentication auth) {
+        notificationService.remove(id, auth.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
-    @DeleteMapping
-    public ResponseEntity<MessageResponse> deleteAllMyNotifications() {
-        int removed = notificationService.deleteAllMyNotifications();
-        return ResponseEntity.ok(new MessageResponse("Deleted " + removed + " notifications."));
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> clearMine(Authentication auth) {
+        notificationService.clearMine(auth.getName());
+        return ResponseEntity.noContent().build();
     }
+
 }

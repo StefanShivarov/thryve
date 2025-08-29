@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
@@ -17,4 +18,12 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Modifying
     @Query("delete from Notification n where n.sender.id = :senderId")
     int deleteAllBySenderId(UUID senderId);
+
+    Page<Notification> findByRecipientId(UUID recipientId, Pageable pageable);
+
+    long countByRecipientIdAndReadFalse(UUID recipientId);
+
+    Optional<Notification> findByIdAndRecipientId(UUID id, UUID recipientId);
+
+    void deleteByRecipientId(UUID recipientId);
 }

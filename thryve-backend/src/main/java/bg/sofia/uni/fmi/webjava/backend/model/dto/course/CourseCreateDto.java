@@ -20,10 +20,6 @@ public class CourseCreateDto {
     private String description;
 
     @NotBlank
-    @Pattern(
-        regexp = "^https?://.*\\.(?:png|jpe?g|gif|bmp|webp|svg|tiff?)(\\?.*)?$",
-        message = "Invalid image URL!"
-    )
     private String imageUrl;
 
 }

@@ -82,4 +82,12 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> me(org.springframework.security.core.Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(userService.getUserByEmail(email));
+    }
+
+
 }

@@ -1,6 +1,5 @@
 package bg.sofia.uni.fmi.webjava.backend.model.entity;
 
-import com.github.f4b6a3.ulid.UlidCreator;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,28 +22,26 @@ public abstract class BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime modifiedAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
-    private void prePersist() {
-        id = UlidCreator.getUlid().toUuid();
+    protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
-        createdAt = now;
-        modifiedAt = now;
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate
-    private void preUpdate() {
-        modifiedAt = LocalDateTime.now();
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
 }

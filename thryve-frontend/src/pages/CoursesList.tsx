@@ -19,10 +19,8 @@ type Page<T> = {
 
 type CourseCreate = {
   title: string;
-  description?: string;
-  imageUrl?: string;
-  category?: string;
-  level?: string;
+  description: string;
+  imageUrl: string;
 };
 
 export default function CoursesList() {
@@ -34,8 +32,10 @@ export default function CoursesList() {
   const [sortBy, setSortBy] = useState<"id" | "title">("id");
   const [direction, setDirection] = useState<"ASC" | "DESC">("ASC");
   const [search, setSearch] = useState("");
+
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState<CourseCreate>({ title: "", description: "", imageUrl: "", category: "", level: "" });
+  const [form, setForm] = useState<CourseCreate>({ title: "", description: "", imageUrl: "" });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["courses", page, pageSize, sortBy, direction],
@@ -60,7 +60,17 @@ export default function CoursesList() {
     },
     onSuccess: () => {
       setShowCreate(false);
+      setForm({ title: "", description: "", imageUrl: "" });
+      setFormError(null);
       qc.invalidateQueries({ queryKey: ["courses"] });
+    },
+    onError: (e: any) => {
+      const msg =
+          e?.response?.data?.message ||
+          e?.response?.data?.error ||
+          e?.message ||
+          "Failed to create course";
+      setFormError(msg);
     },
   });
 
@@ -133,7 +143,7 @@ export default function CoursesList() {
                 </Select>
 
                 {canManage && (
-                    <Button onClick={() => setShowCreate(true)} className="ml-1">
+                    <Button onClick={() => { setFormError(null); setShowCreate(true); }} className="ml-1">
                       Add course
                     </Button>
                 )}
@@ -190,14 +200,22 @@ export default function CoursesList() {
                   <div className="text-sm text-gray-600">
                     Page <span className="font-medium">{(data.number ?? 0) + 1}</span> of{" "}
                     <span className="font-medium">{data.totalPages || 1}</span> •{" "}
-                    <span className="font-medium">{data.totalElements || filtered.length}</span> total
+                    <span className="font-medium">{data.totalElements ?? filtered.length}</span> total
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Button className="min-w-[84px]" disabled={data.first || isFetching} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+                    <Button
+                        className="min-w-[84px]"
+                        disabled={data.first || isFetching}
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    >
                       Prev
                     </Button>
-                    <Button className="min-w-[84px]" disabled={data.last || isFetching} onClick={() => setPage((p) => p + 1)}>
+                    <Button
+                        className="min-w-[84px]"
+                        disabled={data.last || isFetching}
+                        onClick={() => setPage((p) => p + 1)}
+                    >
                       Next
                     </Button>
                   </div>
@@ -211,23 +229,33 @@ export default function CoursesList() {
               <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Add course</h2>
-                  <button onClick={() => setShowCreate(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
+                  <button
+                      onClick={() => { setShowCreate(false); setFormError(null); }}
+                      className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50"
+                  >
                     Close
                   </button>
                 </div>
 
+                {formError && (
+                    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {formError}
+                    </div>
+                )}
+
                 <form
                     className="space-y-4"
+                    noValidate
                     onSubmit={(e) => {
                       e.preventDefault();
-                      if (!form.title.trim()) return;
-                      createMut.mutate({
-                        title: form.title.trim(),
-                        description: form.description?.trim() || "",
-                        imageUrl: form.imageUrl?.trim() || "",
-                        category: form.category?.trim() || "",
-                        level: form.level?.trim() || "",
-                      });
+                      setFormError(null);
+                      const t = form.title.trim();
+                      const d = form.description.trim();
+                      const u = form.imageUrl.trim();
+                      if (!t || t.length < 2) { setFormError("Title must be at least 2 characters."); return; }
+                      if (!d) { setFormError("Description is required."); return; }
+                      if (!u.startsWith("http")) { setFormError("Image URL must start with http or https."); return; }
+                      createMut.mutate({ title: t, description: d, imageUrl: u });
                     }}
                 >
                   <div>
@@ -237,8 +265,11 @@ export default function CoursesList() {
                         value={form.title}
                         onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                         required
+                        minLength={2}
+                        maxLength={100}
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium">Description</label>
                     <textarea
@@ -246,37 +277,27 @@ export default function CoursesList() {
                         rows={3}
                         value={form.description}
                         onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                        required
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium">Category</label>
-                      <input
-                          className="mt-1 w-full rounded-lg border px-3 py-2"
-                          value={form.category}
-                          onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">Level</label>
-                      <input
-                          className="mt-1 w-full rounded-lg border px-3 py-2"
-                          value={form.level}
-                          onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+
                   <div>
                     <label className="block text-sm font-medium">Image URL</label>
                     <input
                         className="mt-1 w-full rounded-lg border px-3 py-2"
+                        type="text"
                         value={form.imageUrl}
                         onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                        required
                     />
                   </div>
 
                   <div className="mt-4 flex items-center justify-end gap-2">
-                    <button type="button" onClick={() => setShowCreate(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
+                    <button
+                        type="button"
+                        onClick={() => { setShowCreate(false); setFormError(null); }}
+                        className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50"
+                    >
                       Cancel
                     </button>
                     <button

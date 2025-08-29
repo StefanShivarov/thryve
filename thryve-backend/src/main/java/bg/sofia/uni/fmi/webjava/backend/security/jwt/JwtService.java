@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -44,21 +46,29 @@ public class JwtService {
     }
 
     public String generateAccessToken(Authentication authentication) {
-        return generateToken(authentication, jwtExpirationMs, new HashMap<>());
+        Map<String, Object> claims = new HashMap<>();
+        List<String> roles = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .map(r -> r.replace("ROLE_", ""))
+            .toList();
+        claims.put("roles", roles);
+        Object p = authentication.getPrincipal();
+        if (p instanceof UserDetails u) {
+            claims.put("name", u.getUsername());
+        }
+        return generateToken(authentication, jwtExpirationMs, claims);
     }
 
     public String generateRefreshToken(Authentication authentication) {
-        Map<String, String> claims = new HashMap<>();
+        Map<String, Object> claims = new HashMap<>();
         claims.put("tokenType", "refresh");
         return generateToken(authentication, refreshExpirationMs, claims);
     }
 
-    private String generateToken(Authentication authentication, long expirationMs, Map<String, String> claims) {
+    private String generateToken(Authentication authentication, long expirationMs, Map<String, Object> claims) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationMs);
-
         return Jwts.builder()
             .subject(userPrincipal.getUsername())
             .claims(claims)
@@ -102,5 +112,4 @@ public class JwtService {
         }
         return claims;
     }
-
 }

@@ -12,6 +12,8 @@ public class NotificationResponseDto {
     private UUID id;
     private String title;
     private String message;
+    private String senderName;
     private boolean read;
     private LocalDateTime createdAt;
+    private String senderEmail;
 }
