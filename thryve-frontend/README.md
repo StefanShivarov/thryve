@@ -1,11 +1,10 @@
-# Edu Frontend Starter
-
+# Thryve Frontend Documention
 A minimal React + Vite + TypeScript + Tailwind app wired to your Spring backend.
 
 ## Quick start
 
 1. **Install Node.js LTS** (>= 18) and npm.
-2. Unzip this folder, open a terminal in it, then run:
+2. open a terminal in it, then run:
    ```bash
    npm install
    cp .env.example .env
