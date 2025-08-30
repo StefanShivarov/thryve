@@ -5,6 +5,7 @@ import { api } from "../lib/api";
 import AppHeader from "../components/AppHeader";
 import { hasAnyRole } from "../lib/auth";
 import SectionCard from "../components/sections/SectionCard";
+import AssignmentsPanel from "../components/assignments/AssignmentsPanel";
 
 type Course = {
     id: number | string;
@@ -25,6 +26,7 @@ type Page<T> = {
     first: boolean;
     last: boolean;
 };
+
 type User = { id: string; email: string; username?: string; firstName?: string; lastName?: string };
 
 export default function CourseDetail() {
@@ -32,7 +34,7 @@ export default function CourseDetail() {
     const { id } = useParams<{ id: string }>();
     const [tab, setTab] = useState<"overview" | "sections" | "assignments">("overview");
 
-    // Course editing modal
+    // Course edit modal
     const [showEditCourse, setShowEditCourse] = useState(false);
     const [editCourse, setEditCourse] = useState<Partial<Course>>({});
     const [courseSaved, setCourseSaved] = useState(false);
@@ -68,11 +70,12 @@ export default function CourseDetail() {
         enabled: !!id,
     });
 
+    // Fetch just to show the “Assignments” count in header
     const assignmentsQ = useQuery({
-        queryKey: ["assignments", id],
+        queryKey: ["assignments-count", id],
         queryFn: async () => {
             const { data } = await api.get(`/api/courses/${id}/assignments`, {
-                params: { pageNumber: 0, pageSize: 50, sortBy: "deadline", direction: "ASC" },
+                params: { pageNumber: 0, pageSize: 1, sortBy: "deadline", direction: "ASC" },
             });
             return (data?.data ?? data) as Page<Assignment>;
         },
@@ -81,9 +84,8 @@ export default function CourseDetail() {
 
     const course = courseQ.data;
     const sections = sectionsQ.data?.content ?? [];
-    const assignments = assignmentsQ.data?.content ?? [];
     const lessonCount = sections.length;
-    const assignmentCount = assignments.length;
+    const assignmentCount = assignmentsQ.data?.totalElements ?? 0;
 
     // ===== Share & Enroll =====
     const handleShare = async () => {
@@ -228,9 +230,20 @@ export default function CourseDetail() {
             ];
 
     const Badge = ({ children }: { children: React.ReactNode }) => (
-        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">{children}</span>
+        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">
+      {children}
+    </span>
     );
-    const Pill = ({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) => (
+
+    const Pill = ({
+                      active,
+                      children,
+                      onClick,
+                  }: {
+        active: boolean;
+        children: React.ReactNode;
+        onClick: () => void;
+    }) => (
         <button
             onClick={onClick}
             className={
@@ -242,7 +255,7 @@ export default function CourseDetail() {
         </button>
     );
 
-    // ===== Loading / error states for course =====
+    // ===== Loading / error states =====
     if (courseQ.isLoading) {
         return (
             <div className="p-6">
@@ -265,6 +278,7 @@ export default function CourseDetail() {
         );
     }
 
+    // ===== Render =====
     return (
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
@@ -291,11 +305,7 @@ export default function CourseDetail() {
                                 <button
                                     className="rounded-lg border bg-white/90 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white"
                                     onClick={() => {
-                                        setEditCourse({
-                                            title: course.title,
-                                            description: course.description,
-                                            imageUrl: course.imageUrl,
-                                        });
+                                        setEditCourse({ title: course.title, description: course.description, imageUrl: course.imageUrl });
                                         setShowEditCourse(true);
                                     }}
                                 >
@@ -310,15 +320,16 @@ export default function CourseDetail() {
                     </div>
                 </div>
 
-                {/* Success toast for course save */}
+                {/* Content */}
                 <div className="px-6">
+                    {/* Save toast */}
                     {courseSaved && (
                         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                             Course updated successfully.
                         </div>
                     )}
 
-                    {/* Tabs header */}
+                    {/* Tabs */}
                     <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2">
                             <Pill active={tab === "overview"} onClick={() => setTab("overview")}>Overview</Pill>
@@ -327,8 +338,12 @@ export default function CourseDetail() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">All Courses</Link>
-                            <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">Requests</Link>
+                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
+                                All Courses
+                            </Link>
+                            <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
+                                Requests
+                            </Link>
                             <button
                                 className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90 disabled:opacity-60"
                                 onClick={() => enrollMutation.mutate()}
@@ -339,7 +354,7 @@ export default function CourseDetail() {
                         </div>
                     </div>
 
-                    {/* ===== Overview ===== */}
+                    {/* OVERVIEW */}
                     {tab === "overview" && (
                         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
                             <div className="rounded-2xl border bg-white p-6">
@@ -365,7 +380,9 @@ export default function CourseDetail() {
                                 <div className="rounded-2xl border bg-white p-6">
                                     <h3 className="text-sm font-semibold text-gray-700">Actions</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>Share</button>
+                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>
+                                            Share
+                                        </button>
                                         <button
                                             className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
                                             onClick={() => enrollMutation.mutate()}
@@ -379,20 +396,15 @@ export default function CourseDetail() {
                         </div>
                     )}
 
-                    {/* ===== Sections ===== */}
+                    {/* SECTIONS */}
                     {tab === "sections" && (
                         <div className="mt-6">
-                            {/* Add section button */}
                             {canManage && (
                                 <div className="mb-3">
                                     <button
                                         className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90"
                                         onClick={() => {
-                                            setNewSection({
-                                                title: "",
-                                                textContent: "",
-                                                orderNumber: (sections?.length ?? 0) + 1,
-                                            });
+                                            setNewSection({ title: "", textContent: "", orderNumber: (sections?.length ?? 0) + 1 });
                                             setShowCreateSection(true);
                                         }}
                                     >
@@ -401,7 +413,6 @@ export default function CourseDetail() {
                                 </div>
                             )}
 
-                            {/* List / states */}
                             {sectionsQ.isLoading ? (
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     {Array.from({ length: 6 }).map((_, i) => (
@@ -427,9 +438,7 @@ export default function CourseDetail() {
                                                 setShowEditSection(true);
                                             }}
                                             onDelete={() => {
-                                                if (confirm("Delete this section?")) {
-                                                    deleteSectionMut.mutate(s.id);
-                                                }
+                                                if (confirm("Delete this section?")) deleteSectionMut.mutate(s.id);
                                             }}
                                         />
                                     ))}
@@ -438,49 +447,8 @@ export default function CourseDetail() {
                         </div>
                     )}
 
-                    {/* ===== Assignments ===== */}
-                    {tab === "assignments" && (
-                        <div className="mt-6">
-                            {assignmentsQ.isLoading ? (
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {Array.from({ length: 4 }).map((_, i) => (
-                                        <div key={i} className="h-28 animate-pulse rounded-2xl border bg-white" />
-                                    ))}
-                                </div>
-                            ) : assignments.length === 0 ? (
-                                <div className="rounded-2xl border bg-white p-10 text-center text-gray-600">No assignments yet.</div>
-                            ) : (
-                                <ul className="space-y-3">
-                                    {assignments.map((a) => (
-                                        <li key={a.id} className="rounded-2xl border bg-white p-4 shadow-sm">
-                                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                                                <div>
-                                                    <div className="text-base font-semibold">{a.title}</div>
-                                                    {a.description && <div className="text-sm text-gray-600">{a.description}</div>}
-                                                </div>
-                                                <div className="mt-2 flex items-center gap-2 md:mt-0">
-                                                    {a.totalPoints != null && (
-                                                        <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">{a.totalPoints} pts</span>
-                                                    )}
-                                                    {a.deadline && (
-                                                        <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">
-                              Due {new Date(a.deadline).toLocaleString()}
-                            </span>
-                                                    )}
-                                                    <button
-                                                        className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
-                                                        onClick={() => alert("TODO: open assignment")}
-                                                    >
-                                                        Open
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    )}
+                    {/* ASSIGNMENTS */}
+                    {tab === "assignments" && id && <AssignmentsPanel courseId={id} />}
                 </div>
             </div>
 

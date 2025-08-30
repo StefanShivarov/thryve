@@ -13,8 +13,8 @@ export default function Logout() {
             try {
 
             } finally {
-                clearTokens();           // removes accessToken & refreshToken from localStorage
-                queryClient.clear();     // clears any cached API data
+                clearTokens();
+                queryClient.clear();
                 const params = new URLSearchParams(location.search);
                 const returnTo = params.get("returnTo") || "/login";
                 navigate(returnTo, { replace: true });

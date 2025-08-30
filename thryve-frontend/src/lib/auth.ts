@@ -1,3 +1,34 @@
+// Minimal auth utils for guards
+const ACCESS_KEY = "accessToken";
+
+type JwtPayload = { exp?: number; [k: string]: any };
+
+const decode = (t?: string): JwtPayload => {
+    if (!t) return {};
+    try {
+        const [, b] = t.split(".");
+        return JSON.parse(atob(b));
+    } catch {
+        return {};
+    }
+};
+
+export const getAccessToken = () => localStorage.getItem(ACCESS_KEY);
+
+export const isTokenExpired = (token?: string, skewSec = 30) => {
+    if (!token) return true;
+    const { exp } = decode(token);
+    if (!exp) return false; // if no exp, assume not expired
+    const nowSec = Math.floor(Date.now() / 1000);
+    return exp - skewSec <= nowSec;
+};
+
+export const isAuthenticated = () => {
+    const t = getAccessToken();
+    return !!t && !isTokenExpired(t);
+};
+
+
 export function decodeToken(): any {
     const t = localStorage.getItem("accessToken");
     if (!t) return null;
