@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.webjava.backend.model.dto.assignment;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -24,6 +25,7 @@ public class AssignmentCreateDto {
     @Size(min = 10, max = 1000, message = "Description must be between 10 and 1000 characters long!")
     private String description;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @NotNull(message = "Deadline cannot be null!")
     private LocalDateTime deadline;
 

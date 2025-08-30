@@ -197,7 +197,6 @@ export default function SectionResources({
                             setFormError("Please paste a URL.");
                             return;
                         }
-                        // frontend sanity check to reduce 400s from backend @Pattern
                         if (!/^https?:\/\/\S+/i.test(url)) {
                             setFormError("URL must start with http:// or https://");
                             return;
