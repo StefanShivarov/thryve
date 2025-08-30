@@ -6,7 +6,9 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +24,7 @@ public class GlobalExceptionHandler {
 
     private static final String INVALID_INPUT_MESSAGE = "Invalid input!";
     private static final String UNEXPECTED_EXCEPTION_MESSAGE = "An unexpected error occurred!";
+    private static final String AUTHENTICATION_EXCEPTION_MESSAGE = "Authentication failed! Invalid email or password!";
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<MessageResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
@@ -95,6 +98,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.FORBIDDEN)
             .body(new MessageResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
+    public ResponseEntity<MessageResponse> handleAuthenticationExceptions(Exception ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(new MessageResponse(AUTHENTICATION_EXCEPTION_MESSAGE));
     }
 
     @ExceptionHandler(Exception.class)
