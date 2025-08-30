@@ -21,11 +21,23 @@ export default function CourseDetail() {
     const canManage = hasAnyRole("CREATOR", "ADMIN");
     const { id } = useParams<{ id: string }>();
     const [tab, setTab] = useState<"overview" | "sections" | "assignments">("overview");
-    const [showEdit, setShowEdit] = useState(false);
-    const [edit, setEdit] = useState<Partial<Course>>({});
-    const [saved, setSaved] = useState(false);
+
+    // Course editing modal
+    const [showEditCourse, setShowEditCourse] = useState(false);
+    const [editCourse, setEditCourse] = useState<Partial<Course>>({});
+    const [courseSaved, setCourseSaved] = useState(false);
+
+    // Section create/edit modals
+    const [showCreateSection, setShowCreateSection] = useState(false);
+    const [newSection, setNewSection] = useState<Partial<Section>>({ title: "", textContent: "", orderNumber: 1 });
+
+    const [showEditSection, setShowEditSection] = useState(false);
+    const [sectionEditing, setSectionEditing] = useState<Section | null>(null);
+    const [editSection, setEditSection] = useState<Partial<Section>>({});
+
     const qc = useQueryClient();
 
+    // ===== Queries =====
     const courseQ = useQuery({
         queryKey: ["course", id],
         queryFn: async () => {
@@ -63,6 +75,7 @@ export default function CourseDetail() {
     const lessonCount = sections.length;
     const assignmentCount = assignments.length;
 
+    // ===== Share & Enroll (unchanged) =====
     const handleShare = async () => {
         const url = window.location.href;
         try {
@@ -123,9 +136,9 @@ export default function CourseDetail() {
         },
     });
 
-    const updateMut = useMutation({
+    // ===== Mutations: Course update =====
+    const updateCourseMut = useMutation({
         mutationFn: async (payload: Partial<Course>) => {
-            // send only title, description, imageUrl (match CourseUpdateDto)
             const body: any = {};
             if (payload.title != null) body.title = payload.title;
             if (payload.description != null) body.description = payload.description;
@@ -134,16 +147,60 @@ export default function CourseDetail() {
             return data?.data ?? data;
         },
         onSuccess: () => {
-            setShowEdit(false);
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2500);
+            setShowEditCourse(false);
+            setCourseSaved(true);
+            setTimeout(() => setCourseSaved(false), 2500);
             qc.invalidateQueries({ queryKey: ["course", id] });
             qc.invalidateQueries({ queryKey: ["courses"] });
         },
     });
 
-    const handleEnrollClick = () => enrollMutation.mutate();
+    // ===== Mutations: Section CRUD =====
+    const createSectionMut = useMutation({
+        mutationFn: async (payload: Partial<Section>) => {
+            const body: any = {
+                title: payload.title?.trim(),
+                textContent: payload.textContent ?? "",
+                orderNumber: Number(payload.orderNumber ?? 1),
+            };
+            const { data } = await api.post(`/api/courses/${id}/sections`, body);
+            return data?.data ?? data;
+        },
+        onSuccess: () => {
+            setShowCreateSection(false);
+            setNewSection({ title: "", textContent: "", orderNumber: (sections?.length ?? 0) + 1 });
+            qc.invalidateQueries({ queryKey: ["sections", id] });
+        },
+    });
 
+    const updateSectionMut = useMutation({
+        mutationFn: async (args: { sectionId: string | number; payload: Partial<Section> }) => {
+            const body: any = {};
+            if (args.payload.title != null) body.title = args.payload.title;
+            if (args.payload.textContent != null) body.textContent = args.payload.textContent;
+            if (args.payload.orderNumber != null) body.orderNumber = Number(args.payload.orderNumber);
+            const { data } = await api.patch(`/api/sections/${args.sectionId}`, body);
+            return data?.data ?? data;
+        },
+        onSuccess: () => {
+            setShowEditSection(false);
+            setSectionEditing(null);
+            setEditSection({});
+            qc.invalidateQueries({ queryKey: ["sections", id] });
+        },
+    });
+
+    const deleteSectionMut = useMutation({
+        mutationFn: async (sectionId: string | number) => {
+            const { data } = await api.delete(`/api/sections/${sectionId}`);
+            return data?.data ?? data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["sections", id] });
+        },
+    });
+
+    // ===== UI helpers =====
     const gradients = [
         "from-indigo-500 via-blue-500 to-purple-500",
         "from-fuchsia-500 via-pink-500 to-rose-500",
@@ -161,22 +218,13 @@ export default function CourseDetail() {
             ];
 
     const Badge = ({ children }: { children: React.ReactNode }) => (
-        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">
-      {children}
-    </span>
+        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">{children}</span>
     );
     const Pill = ({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) => (
-        <button
-            onClick={onClick}
-            className={
-                "rounded-full px-4 py-2 text-sm font-medium transition " +
-                (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")
-            }
-        >
-            {children}
-        </button>
+        <button onClick={onClick} className={"rounded-full px-4 py-2 text-sm font-medium transition " + (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")}>{children}</button>
     );
 
+    // ===== Loading / error states for course =====
     if (courseQ.isLoading) {
         return (
             <div className="p-6">
@@ -203,6 +251,7 @@ export default function CourseDetail() {
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
             <div className="pb-10">
+                {/* Header banner */}
                 <div className="relative">
                     <div className={`h-40 w-full bg-gradient-to-br ${gradient}`} />
                     {course.imageUrl && (
@@ -210,17 +259,13 @@ export default function CourseDetail() {
                             src={course.imageUrl}
                             alt=""
                             className="absolute inset-0 h-40 w-full object-cover opacity-25 mix-blend-multiply"
-                            onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = "none";
-                            }}
+                            onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                         />
                     )}
                     <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.25)_90%)]" />
                     <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 text-white">
                         <div className="mb-2 text-sm opacity-90">
-                            <Link to="/courses" className="underline underline-offset-2">
-                                ← Back to Courses
-                            </Link>
+                            <Link to="/courses" className="underline underline-offset-2">← Back to Courses</Link>
                         </div>
                         <div className="flex items-center justify-between">
                             <h1 className="text-2xl font-semibold">{course.title}</h1>
@@ -228,12 +273,12 @@ export default function CourseDetail() {
                                 <button
                                     className="rounded-lg border bg-white/90 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white"
                                     onClick={() => {
-                                        setEdit({
+                                        setEditCourse({
                                             title: course.title,
                                             description: course.description,
                                             imageUrl: course.imageUrl,
                                         });
-                                        setShowEdit(true);
+                                        setShowEditCourse(true);
                                     }}
                                 >
                                     Edit
@@ -247,43 +292,28 @@ export default function CourseDetail() {
                     </div>
                 </div>
 
+                {/* Success toast for course save */}
                 <div className="px-6">
-                    {/* success toast */}
-                    {saved && (
+                    {courseSaved && (
                         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                             Course updated successfully.
                         </div>
                     )}
 
+                    {/* Tabs header */}
                     <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2">
-                            <Pill active={tab === "overview"} onClick={() => setTab("overview")}>
-                                Overview
-                            </Pill>
-                            <Pill active={tab === "sections"} onClick={() => setTab("sections")}>
-                                Sections
-                            </Pill>
-                            <Pill active={tab === "assignments"} onClick={() => setTab("assignments")}>
-                                Assignments
-                            </Pill>
+                            <Pill active={tab === "overview"} onClick={() => setTab("overview")}>Overview</Pill>
+                            <Pill active={tab === "sections"} onClick={() => setTab("sections")}>Sections</Pill>
+                            <Pill active={tab === "assignments"} onClick={() => setTab("assignments")}>Assignments</Pill>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Link
-                                to="/courses"
-                                className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                            >
-                                All Courses
-                            </Link>
-                            <Link
-                                to={`/courses/${id}/requests`}
-                                className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                            >
-                                Requests
-                            </Link>
+                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">All Courses</Link>
+                            <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">Requests</Link>
                             <button
                                 className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90 disabled:opacity-60"
-                                onClick={handleEnrollClick}
+                                onClick={() => enrollMutation.mutate()}
                                 disabled={enrollMutation.isPending}
                             >
                                 {enrollMutation.isPending ? "Requesting…" : "Request access"}
@@ -291,13 +321,12 @@ export default function CourseDetail() {
                         </div>
                     </div>
 
+                    {/* ===== Overview ===== */}
                     {tab === "overview" && (
                         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
                             <div className="rounded-2xl border bg-white p-6">
                                 <h2 className="text-lg font-semibold">About this course</h2>
-                                <p className="mt-2 whitespace-pre-wrap text-gray-700">
-                                    {course.description || "No description available."}
-                                </p>
+                                <p className="mt-2 whitespace-pre-wrap text-gray-700">{course.description || "No description available."}</p>
                             </div>
 
                             <div className="space-y-6">
@@ -318,12 +347,10 @@ export default function CourseDetail() {
                                 <div className="rounded-2xl border bg-white p-6">
                                     <h3 className="text-sm font-semibold text-gray-700">Actions</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>
-                                            Share
-                                        </button>
+                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>Share</button>
                                         <button
                                             className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
-                                            onClick={handleEnrollClick}
+                                            onClick={() => enrollMutation.mutate()}
                                             disabled={enrollMutation.isPending}
                                         >
                                             {enrollMutation.isPending ? "Requesting…" : "Request access"}
@@ -334,8 +361,29 @@ export default function CourseDetail() {
                         </div>
                     )}
 
+                    {/* ===== Sections ===== */}
                     {tab === "sections" && (
-                        <div className="mt-6 space-y-4">
+                        <div className="mt-6">
+                            {/* Add section button */}
+                            {canManage && (
+                                <div className="mb-3">
+                                    <button
+                                        className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90"
+                                        onClick={() => {
+                                            setNewSection({
+                                                title: "",
+                                                textContent: "",
+                                                orderNumber: (sections?.length ?? 0) + 1,
+                                            });
+                                            setShowCreateSection(true);
+                                        }}
+                                    >
+                                        + Add section
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* List / states */}
                             {sectionsQ.isLoading ? (
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     {Array.from({ length: 6 }).map((_, i) => (
@@ -353,12 +401,37 @@ export default function CourseDetail() {
                                                     <div className="text-sm text-gray-500">Lesson {s.orderNumber}</div>
                                                     <div className="mt-1 text-base font-semibold">{s.title}</div>
                                                 </div>
+                                                {canManage && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            className="rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
+                                                            onClick={() => {
+                                                                setSectionEditing(s);
+                                                                setEditSection({
+                                                                    title: s.title,
+                                                                    textContent: s.textContent ?? "",
+                                                                    orderNumber: s.orderNumber,
+                                                                });
+                                                                setShowEditSection(true);
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-60"
+                                                            onClick={() => deleteSectionMut.mutate(s.id)}
+                                                            disabled={deleteSectionMut.isPending}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
+
                                             {s.textContent && (
-                                                <div className="border-t px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
-                                                    {s.textContent}
-                                                </div>
+                                                <div className="border-t px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">{s.textContent}</div>
                                             )}
+
                                             {s.resources && s.resources.length > 0 && (
                                                 <div className="border-t bg-gray-50 px-4 py-3">
                                                     <div className="text-xs font-semibold text-gray-600">Resources</div>
@@ -385,6 +458,7 @@ export default function CourseDetail() {
                         </div>
                     )}
 
+                    {/* ===== Assignments ===== */}
                     {tab === "assignments" && (
                         <div className="mt-6">
                             {assignmentsQ.isLoading ? (
@@ -406,19 +480,14 @@ export default function CourseDetail() {
                                                 </div>
                                                 <div className="mt-2 flex items-center gap-2 md:mt-0">
                                                     {a.totalPoints != null && (
-                                                        <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">
-                              {a.totalPoints} pts
-                            </span>
+                                                        <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">{a.totalPoints} pts</span>
                                                     )}
                                                     {a.deadline && (
                                                         <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium">
                               Due {new Date(a.deadline).toLocaleString()}
                             </span>
                                                     )}
-                                                    <button
-                                                        className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
-                                                        onClick={() => alert("TODO: open assignment")}
-                                                    >
+                                                    <button className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50" onClick={() => alert("TODO: open assignment")}>
                                                         Open
                                                     </button>
                                                 </div>
@@ -432,24 +501,19 @@ export default function CourseDetail() {
                 </div>
             </div>
 
-            {showEdit && course && (
+            {/* ===== Modal: Edit Course ===== */}
+            {showEditCourse && course && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Edit course</h2>
-                            <button
-                                onClick={() => setShowEdit(false)}
-                                className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50"
-                            >
+                            <button onClick={() => setShowEditCourse(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
                                 Close
                             </button>
                         </div>
 
-                        {/* error banner */}
-                        {updateMut.isError && (
-                            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-                                Failed to save changes.
-                            </div>
+                        {updateCourseMut.isError && (
+                            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">Failed to save changes.</div>
                         )}
 
                         <form
@@ -457,19 +521,19 @@ export default function CourseDetail() {
                             onSubmit={(e) => {
                                 e.preventDefault();
                                 const payload: Partial<Course> = {
-                                    title: edit.title ?? course.title,
-                                    description: edit.description ?? course.description,
-                                    imageUrl: edit.imageUrl ?? course.imageUrl,
+                                    title: editCourse.title ?? course.title,
+                                    description: editCourse.description ?? course.description,
+                                    imageUrl: editCourse.imageUrl ?? course.imageUrl,
                                 };
-                                updateMut.mutate(payload);
+                                updateCourseMut.mutate(payload);
                             }}
                         >
                             <div>
                                 <label className="block text-sm font-medium">Title</label>
                                 <input
                                     className="mt-1 w-full rounded-lg border px-3 py-2"
-                                    value={edit.title ?? ""}
-                                    onChange={(e) => setEdit((f) => ({ ...f, title: e.target.value }))}
+                                    value={editCourse.title ?? ""}
+                                    onChange={(e) => setEditCourse((f) => ({ ...f, title: e.target.value }))}
                                     placeholder={course.title}
                                 />
                             </div>
@@ -478,8 +542,8 @@ export default function CourseDetail() {
                                 <textarea
                                     className="mt-1 w-full rounded-lg border px-3 py-2"
                                     rows={3}
-                                    value={edit.description ?? ""}
-                                    onChange={(e) => setEdit((f) => ({ ...f, description: e.target.value }))}
+                                    value={editCourse.description ?? ""}
+                                    onChange={(e) => setEditCourse((f) => ({ ...f, description: e.target.value }))}
                                     placeholder={course.description || ""}
                                 />
                             </div>
@@ -487,26 +551,159 @@ export default function CourseDetail() {
                                 <label className="block text-sm font-medium">Image URL</label>
                                 <input
                                     className="mt-1 w-full rounded-lg border px-3 py-2"
-                                    value={edit.imageUrl ?? ""}
-                                    onChange={(e) => setEdit((f) => ({ ...f, imageUrl: e.target.value }))}
+                                    value={editCourse.imageUrl ?? ""}
+                                    onChange={(e) => setEditCourse((f) => ({ ...f, imageUrl: e.target.value }))}
                                     placeholder={course.imageUrl || ""}
                                 />
                             </div>
 
                             <div className="mt-4 flex items-center justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEdit(false)}
-                                    className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50"
-                                >
+                                <button type="button" onClick={() => setShowEditCourse(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
                                     Cancel
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={updateMut.isPending}
-                                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                                >
-                                    {updateMut.isPending ? "Saving…" : "Save"}
+                                <button type="submit" disabled={updateCourseMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+                                    {updateCourseMut.isPending ? "Saving…" : "Save"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== Modal: Create Section ===== */}
+            {showCreateSection && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Add section</h2>
+                            <button onClick={() => setShowCreateSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
+                                Close
+                            </button>
+                        </div>
+
+                        {createSectionMut.isError && (
+                            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">Failed to create section.</div>
+                        )}
+
+                        <form
+                            className="space-y-4"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!newSection.title?.trim()) return;
+                                createSectionMut.mutate({
+                                    title: newSection.title.trim(),
+                                    textContent: newSection.textContent ?? "",
+                                    orderNumber: Number(newSection.orderNumber || 1),
+                                });
+                            }}
+                        >
+                            <div>
+                                <label className="block text-sm font-medium">Title</label>
+                                <input
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={newSection.title ?? ""}
+                                    onChange={(e) => setNewSection((f) => ({ ...f, title: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Text content</label>
+                                <textarea
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    rows={4}
+                                    value={newSection.textContent ?? ""}
+                                    onChange={(e) => setNewSection((f) => ({ ...f, textContent: e.target.value }))}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Order number</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={newSection.orderNumber ?? 1}
+                                    onChange={(e) => setNewSection((f) => ({ ...f, orderNumber: Number(e.target.value) }))}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button type="button" onClick={() => setShowCreateSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={createSectionMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+                                    {createSectionMut.isPending ? "Creating…" : "Create"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== Modal: Edit Section ===== */}
+            {showEditSection && sectionEditing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Edit section</h2>
+                            <button onClick={() => setShowEditSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
+                                Close
+                            </button>
+                        </div>
+
+                        {updateSectionMut.isError && (
+                            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">Failed to save section.</div>
+                        )}
+
+                        <form
+                            className="space-y-4"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                updateSectionMut.mutate({
+                                    sectionId: sectionEditing.id,
+                                    payload: {
+                                        title: editSection.title ?? sectionEditing.title,
+                                        textContent: editSection.textContent ?? sectionEditing.textContent,
+                                        orderNumber: editSection.orderNumber ?? sectionEditing.orderNumber,
+                                    },
+                                });
+                            }}
+                        >
+                            <div>
+                                <label className="block text-sm font-medium">Title</label>
+                                <input
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={editSection.title ?? ""}
+                                    onChange={(e) => setEditSection((f) => ({ ...f, title: e.target.value }))}
+                                    placeholder={sectionEditing.title}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Text content</label>
+                                <textarea
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    rows={4}
+                                    value={editSection.textContent ?? ""}
+                                    onChange={(e) => setEditSection((f) => ({ ...f, textContent: e.target.value }))}
+                                    placeholder={sectionEditing.textContent || ""}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Order number</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                                    value={editSection.orderNumber ?? sectionEditing.orderNumber ?? 1}
+                                    onChange={(e) => setEditSection((f) => ({ ...f, orderNumber: Number(e.target.value) }))}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button type="button" onClick={() => setShowEditSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={updateSectionMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+                                    {updateSectionMut.isPending ? "Saving…" : "Save"}
                                 </button>
                             </div>
                         </form>
