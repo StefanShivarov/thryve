@@ -41,6 +41,15 @@ public class ResourceController {
         );
     }
 
+    @GetMapping("/sections/{sectionId}/resources")
+    public ResponseEntity<Page<ResourceResponseDto>> listResourcesForSection(
+        @PathVariable UUID sectionId,
+        @RequestParam(defaultValue = "0") int pageNumber,
+        @RequestParam(defaultValue = "50") int pageSize
+    ) {
+        return ResponseEntity.ok(resourceService.listResourcesForSection(sectionId, pageNumber, pageSize));
+    }
+
     @GetMapping("/resources/{id}")
     public ResponseEntity<ResourceResponseDto> getResourceById(@PathVariable UUID id) {
         return ResponseEntity.ok(resourceService.getResourceById(id));

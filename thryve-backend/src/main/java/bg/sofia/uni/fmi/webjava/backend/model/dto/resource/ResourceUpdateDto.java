@@ -13,7 +13,7 @@ public class ResourceUpdateDto {
     private String name;
 
     @Pattern(
-        regexp = "^https?://[^\\s/$.?#].\\S*$",
+        regexp = "^https?://\\S+$",
         message = "Invalid resource URL!"
     )
     private String url;

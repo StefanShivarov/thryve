@@ -18,7 +18,7 @@ public class ResourceCreateDto {
 
     @NotBlank(message = "Resource URL cannot be blank!")
     @Pattern(
-        regexp = "^https?://[^\\s/$.?#].\\S*$",
+        regexp = "^https?://\\S+$",
         message = "Invalid resource URL!"
     )
     private String url;

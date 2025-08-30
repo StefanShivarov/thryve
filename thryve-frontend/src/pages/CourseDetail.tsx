@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import AppHeader from "../components/AppHeader";
 import { hasAnyRole } from "../lib/auth";
+import SectionCard from "../components/sections/SectionCard";
 
 type Course = {
     id: number | string;
@@ -11,10 +12,19 @@ type Course = {
     description?: string;
     imageUrl?: string;
 };
-type Resource = { id: number | string; name: string; url: string };
-type Section = { id: number | string; title: string; textContent?: string; orderNumber: number; resources?: Resource[] };
+
+type Section = { id: number | string; title: string; textContent?: string; orderNumber: number };
 type Assignment = { id: number | string; title: string; description?: string; deadline?: string; totalPoints?: number };
-type Page<T> = { content: T[]; number: number; size: number; totalElements: number; totalPages: number; first: boolean; last: boolean };
+
+type Page<T> = {
+    content: T[];
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+};
 type User = { id: string; email: string; username?: string; firstName?: string; lastName?: string };
 
 export default function CourseDetail() {
@@ -75,7 +85,7 @@ export default function CourseDetail() {
     const lessonCount = sections.length;
     const assignmentCount = assignments.length;
 
-    // ===== Share & Enroll (unchanged) =====
+    // ===== Share & Enroll =====
     const handleShare = async () => {
         const url = window.location.href;
         try {
@@ -221,7 +231,15 @@ export default function CourseDetail() {
         <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">{children}</span>
     );
     const Pill = ({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) => (
-        <button onClick={onClick} className={"rounded-full px-4 py-2 text-sm font-medium transition " + (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")}>{children}</button>
+        <button
+            onClick={onClick}
+            className={
+                "rounded-full px-4 py-2 text-sm font-medium transition " +
+                (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")
+            }
+        >
+            {children}
+        </button>
     );
 
     // ===== Loading / error states for course =====
@@ -395,63 +413,25 @@ export default function CourseDetail() {
                             ) : (
                                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     {sections.map((s) => (
-                                        <li key={s.id} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-                                            <div className="flex items-start justify-between p-4">
-                                                <div>
-                                                    <div className="text-sm text-gray-500">Lesson {s.orderNumber}</div>
-                                                    <div className="mt-1 text-base font-semibold">{s.title}</div>
-                                                </div>
-                                                {canManage && (
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            className="rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
-                                                            onClick={() => {
-                                                                setSectionEditing(s);
-                                                                setEditSection({
-                                                                    title: s.title,
-                                                                    textContent: s.textContent ?? "",
-                                                                    orderNumber: s.orderNumber,
-                                                                });
-                                                                setShowEditSection(true);
-                                                            }}
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-60"
-                                                            onClick={() => deleteSectionMut.mutate(s.id)}
-                                                            disabled={deleteSectionMut.isPending}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {s.textContent && (
-                                                <div className="border-t px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">{s.textContent}</div>
-                                            )}
-
-                                            {s.resources && s.resources.length > 0 && (
-                                                <div className="border-t bg-gray-50 px-4 py-3">
-                                                    <div className="text-xs font-semibold text-gray-600">Resources</div>
-                                                    <ul className="mt-2 space-y-2">
-                                                        {s.resources.map((r) => (
-                                                            <li key={r.id}>
-                                                                <a
-                                                                    href={r.url}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
-                                                                >
-                                                                    <span className="truncate">{r.name}</span>
-                                                                </a>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </li>
+                                        <SectionCard
+                                            key={s.id}
+                                            section={s}
+                                            canManage={canManage}
+                                            onEdit={() => {
+                                                setSectionEditing(s);
+                                                setEditSection({
+                                                    title: s.title,
+                                                    textContent: s.textContent ?? "",
+                                                    orderNumber: s.orderNumber,
+                                                });
+                                                setShowEditSection(true);
+                                            }}
+                                            onDelete={() => {
+                                                if (confirm("Delete this section?")) {
+                                                    deleteSectionMut.mutate(s.id);
+                                                }
+                                            }}
+                                        />
                                     ))}
                                 </ul>
                             )}
@@ -487,7 +467,10 @@ export default function CourseDetail() {
                               Due {new Date(a.deadline).toLocaleString()}
                             </span>
                                                     )}
-                                                    <button className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50" onClick={() => alert("TODO: open assignment")}>
+                                                    <button
+                                                        className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
+                                                        onClick={() => alert("TODO: open assignment")}
+                                                    >
                                                         Open
                                                     </button>
                                                 </div>
