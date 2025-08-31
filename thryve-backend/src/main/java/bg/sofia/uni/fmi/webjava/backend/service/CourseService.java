@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+import static bg.sofia.uni.fmi.webjava.backend.service.UserService.USER_WITH_EMAIL_NOT_FOUND_ERROR_MESSAGE;
 import static java.lang.String.format;
 
 @Service
@@ -48,29 +49,23 @@ public class CourseService {
     }
 
     @Transactional
-    public CourseResponseDto createCourse(CourseCreateDto dto, String creatorEmail) {
-        Course course = new Course();
-        course.setTitle(dto.getTitle());
-        course.setDescription(dto.getDescription());
-        course.setImageUrl(dto.getImageUrl());
-
-        Course saved = courseRepository.save(course);
-
-        User sender = userRepository.findByEmail(creatorEmail).orElse(null);
-        notificationService.notifyAllUsersCourseCreated(saved, sender);
-
-        return courseDtoMapper.mapCourseToResponseDto(saved);
+    public CourseResponseDto createCourse(CourseCreateDto courseCreateDto, String creatorEmail) {
+        Course course = courseRepository.save(courseDtoMapper.mapDtoToCourse(courseCreateDto));
+        User sender = userRepository.findByEmail(creatorEmail).orElseThrow(
+            () -> new EntityNotFoundException(
+                format(USER_WITH_EMAIL_NOT_FOUND_ERROR_MESSAGE, creatorEmail))
+        );
+        notificationService.notifyAllUsersCourseCreated(course, sender);
+        return courseDtoMapper.mapCourseToResponseDto(course);
     }
 
     @Transactional
     public CourseResponseDto updateCourseById(UUID id, CourseUpdateDto courseUpdateDto, String updaterEmail) {
         Course course = getCourseEntityById(id);
         courseDtoMapper.updateCourseFromDto(courseUpdateDto, course);
-
-        Course saved = courseRepository.save(course);
-
         userRepository.findByEmail(updaterEmail).ifPresent(sender ->
-            notificationService.notifyEnrolledUsersCourseUpdated(saved, sender, "Course details were updated")
+            notificationService.notifyEnrolledUsersCourseUpdated(course, sender,
+                "Course details were updated")
         );
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }
