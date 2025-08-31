@@ -26,6 +26,10 @@ import java.util.Optional;
 import static bg.sofia.uni.fmi.webjava.backend.service.UserService.USER_NOT_FOUND_ERROR_MESSAGE;
 import static bg.sofia.uni.fmi.webjava.backend.service.UserService.USER_WITH_EMAIL_ALREADY_EXISTS_ERROR_MESSAGE;
 import static bg.sofia.uni.fmi.webjava.backend.service.UserService.USER_WITH_USERNAME_ALREADY_EXISTS_ERROR_MESSAGE;
+import static bg.sofia.uni.fmi.webjava.backend.utils.TestUtils.createAdminTestUser;
+import static bg.sofia.uni.fmi.webjava.backend.utils.TestUtils.createAdminUserResponseDto;
+import static bg.sofia.uni.fmi.webjava.backend.utils.TestUtils.createStandardTestUser;
+import static bg.sofia.uni.fmi.webjava.backend.utils.TestUtils.createStandardUserResponseDto;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -53,10 +57,10 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    private static final User STANDARD_TEST_USER = TestUtils.createStandardTestUser();
-    private static final User ADMIN_TEST_USER = TestUtils.createAdminTestUser();
-    private static final UserResponseDto STANDARD_USER_RESPONSE_DTO = TestUtils.createStandardUserResponseDto();
-    private static final UserResponseDto ADMIN_USER_RESPONSE_DTO = TestUtils.createAdminUserResponseDto();
+    private static final User STANDARD_TEST_USER = createStandardTestUser();
+    private static final User ADMIN_TEST_USER = createAdminTestUser();
+    private static final UserResponseDto STANDARD_USER_RESPONSE_DTO = createStandardUserResponseDto();
+    private static final UserResponseDto ADMIN_USER_RESPONSE_DTO = createAdminUserResponseDto();
 
     @Test
     void testGetAllUsers() {
