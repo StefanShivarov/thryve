@@ -1,11 +1,13 @@
 package bg.sofia.uni.fmi.webjava.backend.utils;
 
+import bg.sofia.uni.fmi.webjava.backend.model.dto.assignment.AssignmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentRequestResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.section.SectionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Assignment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
@@ -14,6 +16,7 @@ import bg.sofia.uni.fmi.webjava.backend.model.entity.Section;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class TestUtils {
@@ -38,11 +41,16 @@ public class TestUtils {
 
     private static final String SECTION_NAME = "Test Section";
     private static final String SECTION_TEXT_CONTENT = "This is a test section description.";
-    private static final String SECTION_IMAGE_URL = "https://example.com/image.png";
+
+    private static final String ASSIGNMENT_TITLE = "Test Assignment";
+    private static final String ASSIGNMENT_DESCRIPTION = "This is a test assignment description.";
+    private static final LocalDateTime ASSIGNMENT_DEADLINE = LocalDateTime.now();
+    private static final double ASSIGNMENT_TOTAL_POINTS = 10.0;
 
     private static final UUID ENROLLMENT_ID = UUID.randomUUID();
     private static final UUID ENROLLMENT_REQUEST_ID = UUID.randomUUID();
     private static final UUID SECTION_ID = UUID.randomUUID();
+    private static final UUID ASSIGNMENT_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -165,6 +173,28 @@ public class TestUtils {
         sectionResponseDto.setTextContent(SECTION_TEXT_CONTENT);
         sectionResponseDto.setOrderNumber(1);
         return sectionResponseDto;
+    }
+
+    public static Assignment createTestAssignment() {
+        Assignment assignment = new Assignment();
+        assignment.setId(ASSIGNMENT_ID);
+        assignment.setTitle(ASSIGNMENT_TITLE);
+        assignment.setDescription(ASSIGNMENT_DESCRIPTION);
+        assignment.setDeadline(ASSIGNMENT_DEADLINE);
+        assignment.setTotalPoints(ASSIGNMENT_TOTAL_POINTS);
+        assignment.setCourse(createTestCourse());
+        return assignment;
+    }
+
+    public static AssignmentResponseDto createTestAssignmentResponseDto() {
+        AssignmentResponseDto assignmentResponseDto = new AssignmentResponseDto();
+        assignmentResponseDto.setId(ASSIGNMENT_ID);
+        assignmentResponseDto.setTitle(ASSIGNMENT_TITLE);
+        assignmentResponseDto.setDescription(ASSIGNMENT_DESCRIPTION);
+        assignmentResponseDto.setDeadline(ASSIGNMENT_DEADLINE);
+        assignmentResponseDto.setTotalPoints(ASSIGNMENT_TOTAL_POINTS);
+        assignmentResponseDto.setCourse(createTestCoursePreviewDto());
+        return assignmentResponseDto;
     }
 
 }

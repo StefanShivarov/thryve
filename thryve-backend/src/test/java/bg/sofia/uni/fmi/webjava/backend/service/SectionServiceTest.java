@@ -136,7 +136,7 @@ public class SectionServiceTest {
     }
 
     @Test
-    void testDeleteCourseById() {
+    void testDeleteSectionById() {
         when(sectionRepository.findById(eq(TEST_SECTION.getId())))
             .thenReturn(Optional.of(TEST_SECTION));
         when(sectionDtoMapper.mapToResponseDto(eq(TEST_SECTION)))
