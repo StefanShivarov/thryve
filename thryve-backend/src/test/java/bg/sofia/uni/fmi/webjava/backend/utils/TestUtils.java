@@ -6,6 +6,7 @@ import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentRequestResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.resource.ResourceResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.section.SectionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Assignment;
@@ -14,6 +15,7 @@ import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentState;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Resource;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Section;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
@@ -54,11 +56,15 @@ public class TestUtils {
     private static final String SUBMISSION_FEEDBACK = "Good job!";
     private static final double SUBMISSION_GRADE = 10.0;
 
+    private static final String RESOURCE_NAME = "Test Resource";
+    private static final String RESOURCE_URL = "https://example.com/resource.pdf";
+
     private static final UUID ENROLLMENT_ID = UUID.randomUUID();
     private static final UUID ENROLLMENT_REQUEST_ID = UUID.randomUUID();
     private static final UUID SECTION_ID = UUID.randomUUID();
     private static final UUID ASSIGNMENT_ID = UUID.randomUUID();
     private static final UUID SUBMISSION_ID = UUID.randomUUID();
+    private static final UUID RESOURCE_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -227,6 +233,23 @@ public class TestUtils {
         submissionResponseDto.setAssignment(createTestAssignmentResponseDto());
         submissionResponseDto.setUser(createStandardUserResponseDto());
         return submissionResponseDto;
+    }
+
+    public static Resource createTestResource() {
+        Resource resource = new Resource();
+        resource.setId(RESOURCE_ID);
+        resource.setName(RESOURCE_NAME);
+        resource.setUrl(RESOURCE_URL);
+        resource.setSection(createTestSection());
+        return resource;
+    }
+
+    public static ResourceResponseDto createTestResourceResponseDto() {
+        ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
+        resourceResponseDto.setId(RESOURCE_ID);
+        resourceResponseDto.setName(RESOURCE_NAME);
+        resourceResponseDto.setUrl(RESOURCE_URL);
+        return resourceResponseDto;
     }
 
 }
