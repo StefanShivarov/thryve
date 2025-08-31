@@ -49,13 +49,8 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         List<String> roles = authentication.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
-            .map(r -> r.replace("ROLE_", ""))
             .toList();
         claims.put("roles", roles);
-        Object p = authentication.getPrincipal();
-        if (p instanceof UserDetails u) {
-            claims.put("name", u.getUsername());
-        }
         return generateToken(authentication, jwtExpirationMs, claims);
     }
 

@@ -24,6 +24,7 @@ public class GlobalExceptionHandler {
 
     private static final String INVALID_INPUT_MESSAGE = "Invalid input!";
     private static final String UNEXPECTED_EXCEPTION_MESSAGE = "An unexpected error occurred!";
+    private static final String AUTHENTICATION_EXCEPTION_MESSAGE = "Authentication failed! Invalid email or password!";
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<MessageResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
@@ -98,14 +99,14 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.FORBIDDEN)
             .body(new MessageResponse(ex.getMessage()));
     }
-    @ExceptionHandler({ BadCredentialsException.class, UsernameNotFoundException.class })
-    public ResponseEntity<MessageResponse> handleBadCredentials(RuntimeException ex) {
 
-        log.warn("Authentication failed: {}", ex.getMessage());
+    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
+    public ResponseEntity<MessageResponse> handleAuthenticationExceptions(Exception ex) {
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
-            .body(new MessageResponse("Incorrect email or password."));
+            .body(new MessageResponse(AUTHENTICATION_EXCEPTION_MESSAGE));
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageResponse> handleUnexpectedException(Exception ex) {
         log.error(ex.getClass().getName());
