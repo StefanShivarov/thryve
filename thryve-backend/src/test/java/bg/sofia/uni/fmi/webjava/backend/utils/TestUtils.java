@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.webjava.backend.utils;
 
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
 
@@ -11,15 +13,20 @@ public class TestUtils {
     private static final UUID STANDARD_USER_ID = UUID.randomUUID();
     private static final String STANDARD_USER_USERNAME = "testUser";
     private static final String STANDARD_USER_EMAIL = "test@example.com";
-    private static final String STANDARD_USER_PASSWORD = "testpass";
+    private static final String STANDARD_USER_PASSWORD = "Testpass123";
     private static final String STANDARD_USER_FIRST_NAME = "Test";
 
     private static final UUID ADMIN_USER_ID = UUID.randomUUID();
     private static final String ADMIN_USER_USERNAME = "adminUser";
     private static final String ADMIN_USER_EMAIL = "admin@example.com";
-    private static final String ADMIN_USER_PASSWORD = "adminpass";
+    private static final String ADMIN_USER_PASSWORD = "Adminpass123";
     private static final String ADMIN_USER_FIRST_NAME = "Admin";
     private static final String USER_LAST_NAME = "User";
+
+    private static final UUID COURSE_ID = UUID.randomUUID();
+    private static final String COURSE_TITLE = "Test Course";
+    private static final String COURSE_DESCRIPTION = "This is a test course description.";
+    private static final String COURSE_IMAGE_URL = "https://example.com/image.png";
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -63,6 +70,24 @@ public class TestUtils {
         userResponseDto.setUsername(ADMIN_USER_USERNAME);
         userResponseDto.setEmail(ADMIN_USER_EMAIL);
         return userResponseDto;
+    }
+
+    public static Course createTestCourse() {
+        Course course = new Course();
+        course.setId(COURSE_ID);
+        course.setTitle(COURSE_TITLE);
+        course.setDescription(COURSE_DESCRIPTION);
+        course.setImageUrl(COURSE_IMAGE_URL);
+        return course;
+    }
+
+    public static CourseResponseDto createTestCourseResponseDto() {
+        CourseResponseDto courseResponseDto = new CourseResponseDto();
+        courseResponseDto.setId(COURSE_ID);
+        courseResponseDto.setTitle(COURSE_TITLE);
+        courseResponseDto.setDescription(COURSE_DESCRIPTION);
+        courseResponseDto.setImageUrl(COURSE_IMAGE_URL);
+        return courseResponseDto;
     }
 
 }
