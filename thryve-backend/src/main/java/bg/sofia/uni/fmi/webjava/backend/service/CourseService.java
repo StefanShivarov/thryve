@@ -25,6 +25,7 @@ import static java.lang.String.format;
 public class CourseService {
 
     public static final String COURSE_NOT_FOUND_ERROR_MESSAGE = "Course with id %s was not found!";
+    public static final String COURSE_UPDATED_MESSAGE = "Course details were updated";
 
     private final CourseRepository courseRepository;
     private final CourseDtoMapper courseDtoMapper;
@@ -50,11 +51,11 @@ public class CourseService {
 
     @Transactional
     public CourseResponseDto createCourse(CourseCreateDto courseCreateDto, String creatorEmail) {
-        Course course = courseRepository.save(courseDtoMapper.mapDtoToCourse(courseCreateDto));
         User sender = userRepository.findByEmail(creatorEmail).orElseThrow(
             () -> new EntityNotFoundException(
                 format(USER_WITH_EMAIL_NOT_FOUND_ERROR_MESSAGE, creatorEmail))
         );
+        Course course = courseRepository.save(courseDtoMapper.mapDtoToCourse(courseCreateDto));
         notificationService.notifyAllUsersCourseCreated(course, sender);
         return courseDtoMapper.mapCourseToResponseDto(course);
     }
@@ -62,11 +63,9 @@ public class CourseService {
     @Transactional
     public CourseResponseDto updateCourseById(UUID id, CourseUpdateDto courseUpdateDto, String updaterEmail) {
         Course course = getCourseEntityById(id);
-        courseDtoMapper.updateCourseFromDto(courseUpdateDto, course);
         userRepository.findByEmail(updaterEmail).ifPresent(sender ->
-            notificationService.notifyEnrolledUsersCourseUpdated(course, sender,
-                "Course details were updated")
-        );
+            notificationService.notifyEnrolledUsersCourseUpdated(course, sender, COURSE_UPDATED_MESSAGE));
+        courseDtoMapper.updateCourseFromDto(courseUpdateDto, course);
         return courseDtoMapper.mapCourseToResponseDto(courseRepository.save(course));
     }
 
