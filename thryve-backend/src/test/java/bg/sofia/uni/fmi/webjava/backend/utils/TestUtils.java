@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.webjava.backend.utils;
 
 import bg.sofia.uni.fmi.webjava.backend.model.dto.assignment.AssignmentResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.assignment.submission.AssignmentSubmissionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
@@ -8,6 +9,7 @@ import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentR
 import bg.sofia.uni.fmi.webjava.backend.model.dto.section.SectionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Assignment;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.AssignmentSubmission;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
@@ -47,10 +49,16 @@ public class TestUtils {
     private static final LocalDateTime ASSIGNMENT_DEADLINE = LocalDateTime.now();
     private static final double ASSIGNMENT_TOTAL_POINTS = 10.0;
 
+    private static final String SUBMISSION_URL = "Test Submission";
+    private static final String SUBMISSION_COMMENT = "This is a test submission comment.";
+    private static final String SUBMISSION_FEEDBACK = "Good job!";
+    private static final double SUBMISSION_GRADE = 10.0;
+
     private static final UUID ENROLLMENT_ID = UUID.randomUUID();
     private static final UUID ENROLLMENT_REQUEST_ID = UUID.randomUUID();
     private static final UUID SECTION_ID = UUID.randomUUID();
     private static final UUID ASSIGNMENT_ID = UUID.randomUUID();
+    private static final UUID SUBMISSION_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -195,6 +203,30 @@ public class TestUtils {
         assignmentResponseDto.setTotalPoints(ASSIGNMENT_TOTAL_POINTS);
         assignmentResponseDto.setCourse(createTestCoursePreviewDto());
         return assignmentResponseDto;
+    }
+
+    public static AssignmentSubmission createTestAssignmentSubmission() {
+        AssignmentSubmission submission = new AssignmentSubmission();
+        submission.setId(SUBMISSION_ID);
+        submission.setSubmissionUrl(SUBMISSION_URL);
+        submission.setComment(SUBMISSION_COMMENT);
+        submission.setFeedback(SUBMISSION_FEEDBACK);
+        submission.setGrade(SUBMISSION_GRADE);
+        submission.setAssignment(createTestAssignment());
+        submission.setUser(createStandardTestUser());
+        return submission;
+    }
+
+    public static AssignmentSubmissionResponseDto createTestAssignmentSubmissionResponseDto() {
+        AssignmentSubmissionResponseDto submissionResponseDto = new AssignmentSubmissionResponseDto();
+        submissionResponseDto.setId(SUBMISSION_ID);
+        submissionResponseDto.setSubmissionUrl(SUBMISSION_URL);
+        submissionResponseDto.setComment(SUBMISSION_COMMENT);
+        submissionResponseDto.setFeedback(SUBMISSION_FEEDBACK);
+        submissionResponseDto.setGrade(SUBMISSION_GRADE);
+        submissionResponseDto.setAssignment(createTestAssignmentResponseDto());
+        submissionResponseDto.setUser(createStandardUserResponseDto());
+        return submissionResponseDto;
     }
 
 }
