@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import CourseCard, { Course } from "../components/CourseCard";
 import LoadingSkeleton from "../components/LoadingSkeleton";
@@ -23,8 +24,9 @@ type CourseCreate = {
   imageUrl: string;
 };
 
+const canManage = hasAnyRole("CREATOR", "ADMIN");
+
 export default function CoursesList() {
-  const canManage = hasAnyRole("CREATOR", "ADMIN");
   const qc = useQueryClient();
 
   const [page, setPage] = useState(0);
@@ -40,7 +42,9 @@ export default function CoursesList() {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["courses", page, pageSize, sortBy, direction],
     queryFn: async () => {
-      const res = await api.get("/api/courses", { params: { pageNumber: page, pageSize, sortBy, direction } });
+      const res = await api.get("/api/courses", {
+        params: { pageNumber: page, pageSize, sortBy, direction },
+      });
       return (res.data?.data ?? res.data) as Page<Course>;
     },
     keepPreviousData: true,
@@ -91,7 +95,9 @@ export default function CoursesList() {
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-semibold">Courses</h1>
-              <p className="text-sm text-gray-600">Browse and open a course to view its sections.</p>
+              <p className="text-sm text-gray-600">
+                Browse and open a course to view its sections.
+              </p>
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -181,15 +187,23 @@ export default function CoursesList() {
                           <div key={course.id} className="relative">
                             <CourseCard course={course} />
                             {canManage && (
-                                <button
-                                    onClick={() => {
-                                      if (window.confirm("Delete this course?")) deleteMut.mutate(course.id);
-                                    }}
-                                    disabled={deleteMut.isPending}
-                                    className="absolute right-2 top-2 rounded-md border bg-white px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-60"
-                                >
-                                  Delete
-                                </button>
+                                <div className="absolute right-2 top-2 flex gap-2">
+                                  <Link
+                                      to={`/courses/${course.id}/requests`}
+                                      className="rounded-md border bg-white px-2 py-1 text-xs hover:bg-gray-50"
+                                  >
+                                    Manage requests
+                                  </Link>
+                                  <button
+                                      onClick={() => {
+                                        if (window.confirm("Delete this course?")) deleteMut.mutate(course.id);
+                                      }}
+                                      disabled={deleteMut.isPending}
+                                      className="rounded-md border bg-white px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-60"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                             )}
                           </div>
                       ))}
@@ -230,7 +244,10 @@ export default function CoursesList() {
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Add course</h2>
                   <button
-                      onClick={() => { setShowCreate(false); setFormError(null); }}
+                      onClick={() => {
+                        setShowCreate(false);
+                        setFormError(null);
+                      }}
                       className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50"
                   >
                     Close
@@ -252,9 +269,18 @@ export default function CoursesList() {
                       const t = form.title.trim();
                       const d = form.description.trim();
                       const u = form.imageUrl.trim();
-                      if (!t || t.length < 2) { setFormError("Title must be at least 2 characters."); return; }
-                      if (!d) { setFormError("Description is required."); return; }
-                      if (!u.startsWith("http")) { setFormError("Image URL must start with http or https."); return; }
+                      if (!t || t.length < 2) {
+                        setFormError("Title must be at least 2 characters.");
+                        return;
+                      }
+                      if (!d) {
+                        setFormError("Description is required.");
+                        return;
+                      }
+                      if (!/^https?:\/\//i.test(u)) {
+                        setFormError("Image URL must start with http or https.");
+                        return;
+                      }
                       createMut.mutate({ title: t, description: d, imageUrl: u });
                     }}
                 >
@@ -295,7 +321,10 @@ export default function CoursesList() {
                   <div className="mt-4 flex items-center justify-end gap-2">
                     <button
                         type="button"
-                        onClick={() => { setShowCreate(false); setFormError(null); }}
+                        onClick={() => {
+                          setShowCreate(false);
+                          setFormError(null);
+                        }}
                         className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50"
                     >
                       Cancel

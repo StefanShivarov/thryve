@@ -1,4 +1,4 @@
-// src/pages/AssignmentDetail.tsx
+
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +6,7 @@ import AppHeader from "../components/AppHeader";
 import { api } from "../lib/api";
 import { hasAnyRole } from "../lib/auth";
 
-/* ===== Types ===== */
+
 type Assignment = {
     id: string;
     title: string;
@@ -37,7 +37,6 @@ type Submission = {
     user?: User;
 };
 
-/* ===== Helpers ===== */
 function formatLocal(iso?: string) {
     if (!iso) return "";
     const d = new Date(String(iso).replace(" ", "T"));
@@ -45,8 +44,7 @@ function formatLocal(iso?: string) {
 }
 const MIN_OPTIONAL_TEXT = 10;
 
-/** Decode email (sub) from JWT access token */
-function decodeEmail(): string | null {
+function getTokenEmail(): string | null {
     const t = localStorage.getItem("accessToken");
     if (!t) return null;
     try {
@@ -58,47 +56,47 @@ function decodeEmail(): string | null {
     }
 }
 
-/** Resolve current user id (tries /me first, then searches by email) */
+
 async function resolveUserId(): Promise<string | null> {
-    // cache to avoid repeated list scans
-    const cached = localStorage.getItem("userId");
+    const email = getTokenEmail();
+    const cacheKey = email ? `userId:${email}` : "userId";
+
+    const cached = localStorage.getItem(cacheKey);
     if (cached) return cached;
 
-    // 1) Try /me
     try {
         const meRes = await api.get("/api/users/me");
         const me: User = meRes.data?.data ?? meRes.data;
         if (me?.id) {
-            localStorage.setItem("userId", me.id);
+            localStorage.setItem(cacheKey, me.id);
             return me.id;
         }
     } catch {}
 
-    // 2) Fallback: decode email and scan /users
-    const email = decodeEmail();
-    if (!email) return null;
-    try {
-        const listRes = await api.get("/api/users", {
-            params: { pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
-        });
-        const page: Page<User> = listRes.data?.data ?? listRes.data;
-        const found = (page?.content || []).find((u) => u.email === email);
-        if (found?.id) {
-            localStorage.setItem("userId", found.id);
-            return found.id;
-        }
-    } catch {}
+    if (email) {
+        try {
+            const listRes = await api.get("/api/users", {
+                params: { pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
+            });
+            const page: Page<User> = listRes.data?.data ?? listRes.data;
+            const found = (page?.content || []).find((u) => u.email === email);
+            if (found?.id) {
+                localStorage.setItem(cacheKey, found.id);
+                return found.id;
+            }
+        } catch {}
+    }
+
     return null;
 }
 
-/* ===== Page ===== */
+
 export default function AssignmentDetail() {
     const canManage = hasAnyRole("CREATOR", "ADMIN");
     const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
     const navigate = useNavigate();
     const qc = useQueryClient();
 
-    /* Load assignment (via listing) */
     const assignmentQ = useQuery({
         queryKey: ["assignment", courseId, assignmentId],
         queryFn: async () => {
@@ -113,7 +111,6 @@ export default function AssignmentDetail() {
         enabled: !!courseId && !!assignmentId,
     });
 
-    /* Submissions (only for teachers/admins) */
     const submissionsQ = useQuery({
         queryKey: ["submissions", assignmentId],
         queryFn: async () => {
@@ -127,11 +124,7 @@ export default function AssignmentDetail() {
 
     const assignment = assignmentQ.data;
 
-    /* ===== Create submission (students + staff) ===== */
-    const [createDraft, setCreateDraft] = useState<{ url: string; comment: string }>({
-        url: "",
-        comment: "",
-    });
+    const [createDraft, setCreateDraft] = useState<{ url: string; comment: string }>({ url: "", comment: "" });
     const [createError, setCreateError] = useState<string | null>(null);
     const [createOk, setCreateOk] = useState<string | null>(null);
 
@@ -188,7 +181,6 @@ export default function AssignmentDetail() {
         return urlOk && commentOk && !createMut.isPending;
     }
 
-    /* ===== Grade / edit / delete (teachers/admin) ===== */
     const [gradeDraft, setGradeDraft] = useState<Record<string, { grade?: string; feedback?: string }>>({});
     const [gradeError, setGradeError] = useState<string | null>(null);
     const [gradeOk, setGradeOk] = useState<string | null>(null);
@@ -244,7 +236,6 @@ export default function AssignmentDetail() {
         onError: (err: any) => setDeleteError(err?.response?.data?.message || "Failed to delete submission."),
     });
 
-    /* Banner gradient */
     const gradients = [
         "from-indigo-500 via-blue-500 to-purple-500",
         "from-fuchsia-500 via-pink-500 to-rose-500",
@@ -258,7 +249,6 @@ export default function AssignmentDetail() {
         return gradients[sum % gradients.length];
     }, [assignmentId]);
 
-    /* ===== Loading / error states ===== */
     if (assignmentQ.isLoading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -291,12 +281,11 @@ export default function AssignmentDetail() {
         );
     }
 
-    /* ===== UI ===== */
     return (
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
             <div className="pb-10">
-                {/* Header banner */}
+                {}
                 <div className="relative">
                     <div className={`h-40 w-full bg-gradient-to-br ${gradient}`} />
                     <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_0%,rgba(0,0,0,0.3)_90%)]" />
@@ -322,9 +311,9 @@ export default function AssignmentDetail() {
                     </div>
                 </div>
 
-                {/* Body */}
+                {}
                 <div className="px-6">
-                    {/* Description */}
+                    {}
                     <div className="mt-6 rounded-2xl border bg-white p-6">
                         <h2 className="text-lg font-semibold">Instructions</h2>
                         <p className="mt-2 whitespace-pre-wrap text-gray-700">
@@ -332,12 +321,11 @@ export default function AssignmentDetail() {
                         </p>
                     </div>
 
-                    {/* Submit section */}
+                    {}
                     <div className="mt-6 rounded-2xl border bg-white p-6">
                         <h3 className="text-base font-semibold">Submit your work</h3>
                         <p className="mt-1 text-sm text-gray-600">
-                            Paste a public URL (e.g., Cloudinary link). You can add an optional comment (min{" "}
-                            {MIN_OPTIONAL_TEXT} characters).
+                            Paste a public URL (e.g., Cloudinary link). You can add an optional comment (min {MIN_OPTIONAL_TEXT} characters).
                         </p>
 
                         {createError && (
@@ -395,7 +383,7 @@ export default function AssignmentDetail() {
                         </form>
                     </div>
 
-                    {/* Submissions table (teachers/admin only) */}
+                    {}
                     {canManage && (
                         <div className="mt-6 rounded-2xl border bg-white p-6">
                             <div className="flex items-center justify-between">
@@ -431,9 +419,7 @@ export default function AssignmentDetail() {
                                     ))}
                                 </div>
                             ) : (submissionsQ?.data?.content?.length ?? 0) === 0 ? (
-                                <div className="mt-4 rounded-xl border bg-gray-50 p-6 text-center text-gray-600">
-                                    No submissions yet.
-                                </div>
+                                <div className="mt-4 rounded-xl border bg-gray-50 p-6 text-center text-gray-600">No submissions yet.</div>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
                                     <table className="min-w-full text-sm">
@@ -550,7 +536,7 @@ export default function AssignmentDetail() {
                 </div>
             </div>
 
-            {/* Edit submission modal */}
+            {}
             {canManage && editMetaId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">

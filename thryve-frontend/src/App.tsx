@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import AssignmentDetail from "./pages/AssignmentDetail";
 import GuestOnly from "./components/routing/GuestOnly";
+import CourseRequestsPage from "./pages/CourseRequestsPage";
 
 export default function App() {
     return (
@@ -23,6 +24,7 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
                 <Route path="/logout" element={<Logout />} />
+                <Route path="/courses/:id/requests" element={<CourseRequestsPage />} />
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/courses" element={<CoursesList />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
