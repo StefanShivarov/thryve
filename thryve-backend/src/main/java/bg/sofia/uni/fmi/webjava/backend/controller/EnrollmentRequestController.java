@@ -41,7 +41,7 @@ public class EnrollmentRequestController {
         @RequestParam(defaultValue = "ASC") String direction
     ) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
-        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentsByCourseId(courseId, pageable);
+        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByCourseId(courseId, pageable);
         return ResponseEntity.ok(enrollmentRequests);
     }
 
@@ -55,7 +55,7 @@ public class EnrollmentRequestController {
         @RequestParam(defaultValue = "ASC") String direction
     ) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
-        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentsByUserId(courseId, pageable);
+        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByUserId(courseId, pageable);
         return ResponseEntity.ok(enrollmentRequests);
     }
 

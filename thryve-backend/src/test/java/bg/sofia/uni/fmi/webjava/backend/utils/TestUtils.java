@@ -3,9 +3,12 @@ package bg.sofia.uni.fmi.webjava.backend.utils;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentRequestResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentState;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
 
@@ -32,6 +35,7 @@ public class TestUtils {
     private static final String COURSE_IMAGE_URL = "https://example.com/image.png";
 
     private static final UUID ENROLLMENT_ID = UUID.randomUUID();
+    private static final UUID ENROLLMENT_REQUEST_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -117,6 +121,24 @@ public class TestUtils {
         enrollmentResponseDto.setUser(createStandardUserResponseDto());
         enrollmentResponseDto.setCourse(createTestCoursePreviewDto());
         return enrollmentResponseDto;
+    }
+
+    public static EnrollmentRequest createTestEnrollmentRequest() {
+        EnrollmentRequest enrollmentRequest = new EnrollmentRequest();
+        enrollmentRequest.setId(ENROLLMENT_REQUEST_ID);
+        enrollmentRequest.setUser(createStandardTestUser());
+        enrollmentRequest.setCourse(createTestCourse());
+        enrollmentRequest.setState(EnrollmentState.PENDING);
+        return enrollmentRequest;
+    }
+
+    public static EnrollmentRequestResponseDto createTestEnrollmentRequestResponseDto() {
+        EnrollmentRequestResponseDto enrollmentRequestResponseDto = new EnrollmentRequestResponseDto();
+        enrollmentRequestResponseDto.setId(ENROLLMENT_REQUEST_ID);
+        enrollmentRequestResponseDto.setUser(createStandardUserResponseDto());
+        enrollmentRequestResponseDto.setCourse(createTestCoursePreviewDto());
+        enrollmentRequestResponseDto.setState(EnrollmentState.PENDING);
+        return enrollmentRequestResponseDto;
     }
 
 }

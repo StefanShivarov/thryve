@@ -38,13 +38,13 @@ public class EnrollmentRequestService {
     private final EnrollmentService enrollmentService;
 
     @Transactional
-    public Page<EnrollmentRequestResponseDto> getEnrollmentsByCourseId(UUID courseId, Pageable pageable) {
+    public Page<EnrollmentRequestResponseDto> getEnrollmentRequestsByCourseId(UUID courseId, Pageable pageable) {
         return enrollmentRequestRepository.findEnrollmentRequestsByCourseId(courseId, pageable)
             .map(enrollmentRequestDtoMapper::mapToResponseDto);
     }
 
     @Transactional
-    public Page<EnrollmentRequestResponseDto> getEnrollmentsByUserId(UUID userId, Pageable pageable) {
+    public Page<EnrollmentRequestResponseDto> getEnrollmentRequestsByUserId(UUID userId, Pageable pageable) {
         return enrollmentRequestRepository.findEnrollmentRequestsByUserId(userId, pageable)
             .map(enrollmentRequestDtoMapper::mapToResponseDto);
     }
@@ -73,7 +73,6 @@ public class EnrollmentRequestService {
 
     @Transactional
     public EnrollmentRequestResponseDto acceptEnrollmentRequestById(UUID id) {
-        System.out.println("here");
         EnrollmentRequest request = getEnrollmentRequestEntityById(id);
         if (isEnrollmentRequestInFinalState(request)) {
             throw new EnrollmentRequestAlreadyFinalizedException(
