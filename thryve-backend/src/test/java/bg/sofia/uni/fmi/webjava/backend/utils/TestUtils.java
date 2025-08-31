@@ -4,11 +4,13 @@ import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.request.EnrollmentRequestResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.section.SectionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentState;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Section;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
 
@@ -34,8 +36,13 @@ public class TestUtils {
     private static final String COURSE_DESCRIPTION = "This is a test course description.";
     private static final String COURSE_IMAGE_URL = "https://example.com/image.png";
 
+    private static final String SECTION_NAME = "Test Section";
+    private static final String SECTION_TEXT_CONTENT = "This is a test section description.";
+    private static final String SECTION_IMAGE_URL = "https://example.com/image.png";
+
     private static final UUID ENROLLMENT_ID = UUID.randomUUID();
     private static final UUID ENROLLMENT_REQUEST_ID = UUID.randomUUID();
+    private static final UUID SECTION_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -139,6 +146,25 @@ public class TestUtils {
         enrollmentRequestResponseDto.setCourse(createTestCoursePreviewDto());
         enrollmentRequestResponseDto.setState(EnrollmentState.PENDING);
         return enrollmentRequestResponseDto;
+    }
+
+    public static Section createTestSection() {
+        Section section = new Section();
+        section.setId(SECTION_ID);
+        section.setTitle("Test Section");
+        section.setTextContent("This is a test section description.");
+        section.setOrderNumber(1);
+        section.setCourse(createTestCourse());
+        return section;
+    }
+
+    public static SectionResponseDto createTestSectionResponseDto() {
+        SectionResponseDto sectionResponseDto = new SectionResponseDto();
+        sectionResponseDto.setId(SECTION_ID);
+        sectionResponseDto.setTitle(SECTION_NAME);
+        sectionResponseDto.setTextContent(SECTION_TEXT_CONTENT);
+        sectionResponseDto.setOrderNumber(1);
+        return sectionResponseDto;
     }
 
 }

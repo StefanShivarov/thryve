@@ -18,7 +18,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Section extends  BaseEntity {
+public class Section extends BaseEntity {
 
     @Column(name = "title", nullable = false)
     private String title;
