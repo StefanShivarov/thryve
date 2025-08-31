@@ -1,8 +1,11 @@
 package bg.sofia.uni.fmi.webjava.backend.utils;
 
+import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CourseResponseDto;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.enrollment.EnrollmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.user.UserResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.UserRole;
 
@@ -27,6 +30,8 @@ public class TestUtils {
     private static final String COURSE_TITLE = "Test Course";
     private static final String COURSE_DESCRIPTION = "This is a test course description.";
     private static final String COURSE_IMAGE_URL = "https://example.com/image.png";
+
+    private static final UUID ENROLLMENT_ID = UUID.randomUUID();
 
     public static User createStandardTestUser() {
         User user = new User();
@@ -88,6 +93,30 @@ public class TestUtils {
         courseResponseDto.setDescription(COURSE_DESCRIPTION);
         courseResponseDto.setImageUrl(COURSE_IMAGE_URL);
         return courseResponseDto;
+    }
+
+    public static CoursePreviewDto createTestCoursePreviewDto() {
+        CoursePreviewDto coursePreviewDto = new CoursePreviewDto();
+        coursePreviewDto.setId(COURSE_ID);
+        coursePreviewDto.setTitle(COURSE_TITLE);
+        coursePreviewDto.setImageUrl(COURSE_IMAGE_URL);
+        return coursePreviewDto;
+    }
+
+    public static Enrollment createTestEnrollment() {
+        Enrollment enrollment = new Enrollment();
+        enrollment.setId(ENROLLMENT_ID);
+        enrollment.setUser(createStandardTestUser());
+        enrollment.setCourse(createTestCourse());
+        return enrollment;
+    }
+
+    public static EnrollmentResponseDto createTestEnrollmentResponseDto() {
+        EnrollmentResponseDto enrollmentResponseDto = new EnrollmentResponseDto();
+        enrollmentResponseDto.setId(ENROLLMENT_ID);
+        enrollmentResponseDto.setUser(createStandardUserResponseDto());
+        enrollmentResponseDto.setCourse(createTestCoursePreviewDto());
+        return enrollmentResponseDto;
     }
 
 }
