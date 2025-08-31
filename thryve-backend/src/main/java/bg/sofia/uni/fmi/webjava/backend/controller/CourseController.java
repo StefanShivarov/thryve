@@ -60,7 +60,7 @@ public class CourseController {
     @PostMapping(value = {"", "/"})
     public ResponseEntity<CourseResponseDto> createCourse(
         @RequestBody @Valid CourseCreateDto courseCreateDto,
-        org.springframework.security.core.Authentication authentication
+        Authentication authentication
     ) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
