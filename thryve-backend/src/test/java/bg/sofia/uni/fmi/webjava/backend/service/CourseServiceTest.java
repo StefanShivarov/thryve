@@ -66,8 +66,8 @@ public class CourseServiceTest {
     @Test
     void testGetAllCourses() {
         Pageable pageable = PageRequest.of(0, 10);
-        List<Course> expectedUsers = List.of(TEST_COURSE);
-        Page<Course> page = new PageImpl<>(expectedUsers);
+        List<Course> expectedCourses = List.of(TEST_COURSE);
+        Page<Course> page = new PageImpl<>(expectedCourses);
 
         when(courseRepository.findAll(eq(pageable))).thenReturn(page);
         when(courseDtoMapper.mapCourseToResponseDto(eq(TEST_COURSE))).thenReturn(TEST_COURSE_RESPONSE_DTO);
@@ -76,7 +76,7 @@ public class CourseServiceTest {
 
         verify(courseRepository, times(1)).findAll(eq(pageable));
         assertNotNull(result);
-        assertEquals(expectedUsers.size(), result.getContent().size());
+        assertEquals(expectedCourses.size(), result.getContent().size());
         assertTrue(result.getContent().contains(TEST_COURSE_RESPONSE_DTO));
     }
 
