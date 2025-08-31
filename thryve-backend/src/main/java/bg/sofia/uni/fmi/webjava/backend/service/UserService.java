@@ -86,17 +86,7 @@ public class UserService {
 
     public UserResponseDto getUserByEmail(String email) {
         var user = userRepository.findByEmail(email).orElseThrow();
-        return toResponse(user);
-    }
-
-    private UserResponseDto toResponse(User u) {
-        var dto = new UserResponseDto();
-        dto.setId(u.getId());
-        dto.setEmail(u.getEmail());
-        dto.setUsername(u.getUsername());
-        dto.setFirstName(u.getFirstName());
-        dto.setLastName(u.getLastName());
-        return dto;
+        return userDtoMapper.mapUserToResponseDto(user);
     }
 
 }
