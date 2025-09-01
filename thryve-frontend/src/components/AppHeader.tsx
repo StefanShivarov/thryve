@@ -126,9 +126,9 @@ export default function AppHeader() {
                 <div className="flex items-center">
                     <Link
                         to="/"
-                        className="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+                        className="inline-flex items-center rounded-lg px-2 py-1 text-lg font-semibold text-gray-900 hover:bg-gray-100"
                     >
-                        Home
+                        Thryve
                     </Link>
                 </div>
 
