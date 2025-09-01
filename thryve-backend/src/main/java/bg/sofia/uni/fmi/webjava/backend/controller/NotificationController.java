@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.webjava.backend.controller;
 
-import bg.sofia.uni.fmi.webjava.backend.model.dto.MessageResponse;
+import bg.sofia.uni.fmi.webjava.backend.model.dto.EntityModificationResponse;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.NotificationResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NotificationController {
 
+    //TODO: remove /me endpoints
+
+    private static final String NOTIFICATION_UPDATED_MESSAGE = "Notification marked as read.";
+    private static final String NOTIFICATION_DELETED_MESSAGE = "Notification deleted successfully.";
+
     private final NotificationService notificationService;
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
@@ -33,33 +38,43 @@ public class NotificationController {
     ) {
         Sort.Direction dir = Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.DESC);
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(dir, sortBy));
-        return ResponseEntity.ok(notificationService.getMyNotifications(auth.getName(), pageable));
+        return ResponseEntity.ok(notificationService.getNotificationsByRecipientEmail(auth.getName(), pageable));
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
     @GetMapping("/me/unread-count")
     public ResponseEntity<Long> getMyUnreadCount(Authentication auth) {
-        return ResponseEntity.ok(notificationService.getMyUnreadCount(auth.getName()));
+        return ResponseEntity.ok(notificationService
+            .getUnreadNotificationsCountByRecipientEmail(auth.getName())
+        );
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
     @PostMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable UUID id, Authentication auth) {
-        notificationService.markAsRead(id, auth.getName());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<EntityModificationResponse<NotificationResponseDto>> markAsRead(
+        @PathVariable UUID id, Authentication auth
+    ) {
+        return ResponseEntity.ok(new EntityModificationResponse<>(
+            NOTIFICATION_UPDATED_MESSAGE,
+            notificationService.markNotificationAsReadByRecipientEmail(id, auth.getName())
+        ));
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOne(@PathVariable UUID id, Authentication auth) {
-        notificationService.remove(id, auth.getName());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<EntityModificationResponse<NotificationResponseDto>> deleteNotificationById(
+        @PathVariable UUID id, Authentication auth
+    ) {
+        return ResponseEntity.ok().body(new EntityModificationResponse<>(
+            NOTIFICATION_DELETED_MESSAGE,
+            notificationService.deleteNotificationById(id, auth.getName())
+        ));
     }
 
     @PreAuthorize("hasAnyRole('STANDARD','CREATOR','ADMIN')")
     @DeleteMapping("/me")
     public ResponseEntity<Void> clearMine(Authentication auth) {
-        notificationService.clearMine(auth.getName());
+        notificationService.deleteNotificationsByRecipientEmail(auth.getName());
         return ResponseEntity.noContent().build();
     }
 
