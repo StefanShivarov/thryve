@@ -3,8 +3,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, clearTokens } from "../lib/api";
-import { Link, useNavigate } from "react-router-dom";
+import { api } from "../lib/api";
+import { Link } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 
 type User = {
@@ -23,7 +23,6 @@ const schema = z.object({
     lastName: z.string().min(2, "Last name must be at least 2 characters").max(50),
 });
 
-// --- Helpers ---
 function decodeEmailFromJwt(): string | null {
     const t = localStorage.getItem("accessToken");
     if (!t) return null;
@@ -37,12 +36,10 @@ function decodeEmailFromJwt(): string | null {
 }
 
 async function fetchCurrentUser(): Promise<User> {
-    // Try /me first
     try {
         const meRes = await api.get("/api/users/me");
         return (meRes.data?.data ?? meRes.data) as User;
     } catch {
-        // Fallback by email (if backend doesn't provide /me)
         const email = decodeEmailFromJwt();
         if (!email) throw new Error("NO_TOKEN_EMAIL");
         const res = await api.get("/api/users", {
@@ -56,7 +53,6 @@ async function fetchCurrentUser(): Promise<User> {
 }
 
 export default function Profile() {
-    const navigate = useNavigate();
     const qc = useQueryClient();
     const [saved, setSaved] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
@@ -65,7 +61,6 @@ export default function Profile() {
         queryKey: ["profile-me"],
         queryFn: fetchCurrentUser,
         retry: (failureCount, err: any) => {
-            // Avoid hammering if unauthorized
             const status = err?.response?.status;
             if (status === 401 || status === 403) return false;
             return failureCount < 2;
@@ -124,22 +119,6 @@ export default function Profile() {
         },
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: async () => {
-            if (!meQ.data?.id) throw new Error("NO_ME_ID");
-            const { data } = await api.delete(`/api/users/${meQ.data.id}`);
-            return data?.data ?? data;
-        },
-        onSuccess: () => {
-            clearTokens();
-            navigate("/register", { replace: true });
-        },
-        onError: (e: any) => {
-            const msg = e?.response?.data?.message || "Delete failed.";
-            setServerError(msg);
-        },
-    });
-
     const onSubmit = (v: z.infer<typeof schema>) => {
         setServerError(null);
         updateMutation.mutate(v);
@@ -149,7 +128,6 @@ export default function Profile() {
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
             <div className="p-6">
-
                 {meQ.isLoading && <div className="h-36 animate-pulse rounded-3xl bg-gray-200" />}
 
                 {meQ.error && (
@@ -185,16 +163,11 @@ export default function Profile() {
                                         {...register("email")}
                                         className="mt-1 w-full rounded-lg border px-3 py-2 bg-gray-50 text-gray-600"
                                     />
-                                    {errors.email && (
-                                        <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-                                    )}
+                                    {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium">Username</label>
-                                    <input
-                                        {...register("username")}
-                                        className="mt-1 w-full rounded-lg border px-3 py-2"
-                                    />
+                                    <input {...register("username")} className="mt-1 w-full rounded-lg border px-3 py-2" />
                                     {errors.username && (
                                         <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>
                                     )}
@@ -202,20 +175,14 @@ export default function Profile() {
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
                                         <label className="block text-sm font-medium">First name</label>
-                                        <input
-                                            {...register("firstName")}
-                                            className="mt-1 w-full rounded-lg border px-3 py-2"
-                                        />
+                                        <input {...register("firstName")} className="mt-1 w-full rounded-lg border px-3 py-2" />
                                         {errors.firstName && (
                                             <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
                                         )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium">Last name</label>
-                                        <input
-                                            {...register("lastName")}
-                                            className="mt-1 w-full rounded-lg border px-3 py-2"
-                                        />
+                                        <input {...register("lastName")} className="mt-1 w-full rounded-lg border px-3 py-2" />
                                         {errors.lastName && (
                                             <p className="mt-1 text-xs text-red-600">{errors.lastName.message}</p>
                                         )}
@@ -235,31 +202,12 @@ export default function Profile() {
                             <div className="rounded-2xl border bg-white p-6">
                                 <h3 className="text-sm font-semibold text-gray-700">Quick links</h3>
                                 <div className="mt-3 flex flex-col gap-2">
-                                    <Link to="/assignments" className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50">
-                                        Assignments
-                                    </Link>
-                                    <Link to="/notifications" className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50">
-                                        Notifications
-                                    </Link>
                                     <Link to="/courses" className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50">
                                         Courses
                                     </Link>
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-                                <h3 className="text-sm font-semibold text-red-700">Danger zone</h3>
-                                <p className="mt-2 text-sm text-red-700">Deleting the account is irreversible.</p>
-                                <button
-                                    onClick={() => {
-                                        if (window.confirm("Delete your account?")) deleteMutation.mutate();
-                                    }}
-                                    disabled={deleteMutation.isPending}
-                                    className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
-                                >
-                                    {deleteMutation.isPending ? "Deleting…" : "Delete account"}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}

@@ -48,18 +48,15 @@ function toApiLocalDateTimeSeconds(value: string): string {
     const m1 = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/);
     if (m1) return `${m1[1]}:00`;
 
-    // Sometimes it already contains seconds
     const m2 = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})$/);
     if (m2) return m2[1];
 
-    // Remove timezone if browser appended one (edge cases)
     const stripped = value.replace(/Z|[+\-]\d{2}:\d{2}$/, "");
     const m3 = stripped.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/);
     if (m3) return `${m3[1]}:00`;
     const m4 = stripped.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})$/);
     if (m4) return m4[1];
 
-    // Last resort: parse to local wall time and rebuild
     const d = new Date(value);
     if (!Number.isNaN(d.getTime())) {
         const pad = (n: number) => String(n).padStart(2, "0");
@@ -196,7 +193,6 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
                                 </div>
 
                                 <div className="mt-2 flex shrink-0 items-center gap-2 md:mt-0">
-                                    {/* Everyone can open */}
                                     <button
                                         className="rounded-lg border bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
                                         onClick={() =>
