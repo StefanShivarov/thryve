@@ -61,7 +61,6 @@ export default function Login() {
         return;
       }
 
-      // Other errors → compact banner
       const firstDetail =
           (Array.isArray(payload?.errors) && payload.errors[0]) ||
           payload?.message ||
@@ -97,7 +96,7 @@ export default function Login() {
                 type="email"
                 autoComplete="email"
                 {...register("email", {
-                  onChange: () => clearErrors("password"), // typing again clears creds error
+                  onChange: () => clearErrors("password"),
                 })}
             />
             {errors.email && (

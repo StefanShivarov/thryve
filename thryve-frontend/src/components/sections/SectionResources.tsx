@@ -5,7 +5,6 @@ import { api } from "../../lib/api";
 type Resource = { id: string | number; name: string; url: string };
 type Page<T> = { content: T[]; totalElements?: number };
 
-/** Try to make a nice default name from the URL if the user didn't type one. */
 function deriveNameFromUrl(raw: string): string {
     try {
         const u = new URL(raw);

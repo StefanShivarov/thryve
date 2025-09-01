@@ -48,7 +48,7 @@ public class EnrollmentRequestController {
     @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping("/users/{userId}/enrollment-requests")
     public ResponseEntity<Page<EnrollmentRequestResponseDto>> getEnrollmentRequestsByUserId(
-        @PathVariable("userId") UUID courseId,
+        @PathVariable("userId") UUID userId,
         @RequestParam(defaultValue = "0") int pageNumber,
         @RequestParam(defaultValue = "10") int pageSize,
         @RequestParam(defaultValue = "id") String sortBy,
@@ -59,7 +59,7 @@ public class EnrollmentRequestController {
         return ResponseEntity.ok(enrollmentRequests);
     }
 
-    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @PostMapping("/courses/{courseId}/enrollment-requests")
     public ResponseEntity<EntityModificationResponse<EnrollmentRequestResponseDto>> createEnrollmentRequest(
         @PathVariable("courseId") UUID courseId,

@@ -26,7 +26,6 @@ type Page<T> = {
 /** Convert API ISO -> <input type="datetime-local"> value (yyyy-MM-ddTHH:mm) */
 function toInputValue(iso?: string): string {
     if (!iso) return "";
-    // Accept with/without seconds and fractional seconds
     const match = iso.match(
         /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d{1,9})?)?$/
     );
@@ -34,7 +33,6 @@ function toInputValue(iso?: string): string {
         const [, y, MM, dd, HH, mm] = match;
         return `${y}-${MM}-${dd}T${HH}:${mm}`;
     }
-    // Fallback: best effort from Date
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -97,7 +95,7 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
         },
     });
 
-    /* Create */
+
     const createMut = useMutation({
         mutationFn: async (payload: {
             title: string;
@@ -115,7 +113,6 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
         },
     });
 
-    /* Update */
     const updateMut = useMutation({
         mutationFn: async (args: { id: string; patch: Partial<Assignment> }) => {
             const body: any = {};
@@ -133,7 +130,6 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
         },
     });
 
-    /* Delete */
     const deleteMut = useMutation({
         mutationFn: async (id: string) => {
             const { data } = await api.delete(`/api/assignments/${id}`);
@@ -245,7 +241,6 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
                 </ul>
             )}
 
-            {/* Create modal */}
             {showCreate && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
@@ -354,7 +349,6 @@ export default function AssignmentsPanel({ courseId }: { courseId: string }) {
                 </div>
             )}
 
-            {/* Edit modal */}
             {showEdit && editing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">

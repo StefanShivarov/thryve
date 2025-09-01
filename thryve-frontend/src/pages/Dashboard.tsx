@@ -1,24 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import AppHeader from "../components/AppHeader";
+import { api } from "../lib/api";
 
 function IconBookOpen(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg viewBox="0 0 24 24" fill="none" {...props}>
             <path d="M12 19c-2-1.5-5-1.5-7 0V6c2-1.5 5-1.5 7 0m0 13c2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0m0 13V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-    );
-}
-function IconClipboardList(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" {...props}>
-            <path d="M9 5h6M9 9h6M9 13h6M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-    );
-}
-function IconBell(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" {...props}>
-            <path d="M15 17H9m8-6a5 5 0 10-10 0c0 3-1 4-2 5h14c-1-1-2-2-2-5zM12 21a2 2 0 01-2-2h4a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
     );
 }
@@ -52,8 +41,84 @@ function avatarFromToken() {
     }
 }
 
+type Page<T> = {
+    content: T[];
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+};
+type EnrollmentRequest = { id: string; state?: "PENDING" | "ACCEPTED" | "REJECTED"; courseId?: string | number; course?: { id?: string | number } };
+type User = { id: string; email?: string };
+
+function getTokenEmail(): string | null {
+    const t = localStorage.getItem("accessToken");
+    if (!t) return null;
+    try {
+        const [, b] = t.split(".");
+        const p = JSON.parse(atob(b || ""));
+        return p?.sub || null;
+    } catch {
+        return null;
+    }
+}
+
+async function resolveUserId(): Promise<string | null> {
+    const email = getTokenEmail();
+    if (!email) return null;
+    const cacheKey = `userId:${email}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+
+    try {
+        const meRes = await api.get("/api/users/me");
+        const me: User = meRes.data?.data ?? meRes.data;
+        if (me?.id) {
+            localStorage.setItem(cacheKey, me.id);
+            return me.id;
+        }
+    } catch {}
+
+    try {
+        const res = await api.get("/api/users", {
+            params: { pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
+        });
+        const page: Page<User> = res.data?.data ?? res.data;
+        const found = (page?.content || []).find((u) => u.email === email);
+        if (found?.id) {
+            localStorage.setItem(cacheKey, found.id);
+            return found.id;
+        }
+    } catch {}
+
+    return null;
+}
+
 export default function Dashboard() {
     const { label, initial } = avatarFromToken();
+
+    const [userId, setUserId] = useState<string | null>(null);
+    useEffect(() => {
+        resolveUserId().then(setUserId);
+    }, []);
+
+    const pendingQ = useQuery({
+        queryKey: ["my-enrollment-requests", userId],
+        enabled: !!userId,
+        queryFn: async () => {
+            const { data } = await api.get(`/api/users/${userId}/enrollment-requests`, {
+                params: { pageNumber: 0, pageSize: 500, sortBy: "id", direction: "DESC" },
+            });
+            const page: Page<EnrollmentRequest> = data?.data ?? data;
+            const items = page?.content ?? [];
+            return items.filter((r) => r.state === "PENDING").length;
+        },
+        staleTime: 10_000,
+    });
+
+    const pendingCount = pendingQ.data ?? 0;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -76,7 +141,7 @@ export default function Dashboard() {
             </div>
 
             <div className="px-6 py-6">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Link to="/courses" className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="rounded-xl bg-indigo-50 p-3">
@@ -84,43 +149,20 @@ export default function Dashboard() {
                             </div>
                             <div>
                                 <div className="text-sm text-gray-500">Browse</div>
-                                <div className="text-lg font-semibold">Courses</div>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-lg font-semibold">Courses</div>
+                                    {pendingCount > 0 && (
+                                        <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700">
+                      {pendingCount} pending
+                    </span>
+                                    )}
+                                </div>
                             </div>
                             <IconChevronRight className="ml-auto h-5 w-5 text-gray-400 group-hover:text-gray-600" />
                         </div>
                         <p className="mt-3 text-sm text-gray-600">Find courses and see details.</p>
                     </Link>
 
-                    <Link to="/assignments" className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-xl bg-emerald-50 p-3">
-                                <IconClipboardList className="h-6 w-6 text-emerald-600" />
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500">Your work</div>
-                                <div className="text-lg font-semibold">Assignments</div>
-                            </div>
-                            <IconChevronRight className="ml-auto h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                        </div>
-                        <p className="mt-3 text-sm text-gray-600">Track deadlines and submissions.</p>
-                    </Link>
-
-                    <Link to="/notifications" className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-xl bg-amber-50 p-3">
-                                <IconBell className="h-6 w-6 text-amber-600" />
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500">Updates</div>
-                                <div className="text-lg font-semibold">Notifications</div>
-                            </div>
-                            <IconChevronRight className="ml-auto h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                        </div>
-                        <p className="mt-3 text-sm text-gray-600">Messages about courses and grades.</p>
-                    </Link>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Link to="/profile" className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="rounded-xl bg-sky-50 p-3">
@@ -133,19 +175,6 @@ export default function Dashboard() {
                             <IconChevronRight className="ml-auto h-5 w-5 text-gray-400 group-hover:text-gray-600" />
                         </div>
                         <p className="mt-3 text-sm text-gray-600">View and edit your details.</p>
-                    </Link>
-
-                    <Link to="/courses" className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="text-sm text-gray-500">Get started</div>
-                                <div className="text-lg font-semibold">Continue learning</div>
-                                <p className="mt-2 text-sm text-gray-600">Jump back into your courses.</p>
-                            </div>
-                            <div className="rounded-xl bg-gray-50 p-4">
-                                <IconBookOpen className="h-8 w-8 text-gray-700" />
-                            </div>
-                        </div>
                     </Link>
                 </div>
             </div>

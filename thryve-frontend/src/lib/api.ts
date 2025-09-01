@@ -2,13 +2,11 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// ----- Axios instance -----
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: false,
 });
 
-// ----- Token helpers -----
 const ACCESS_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
 
@@ -25,7 +23,6 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_KEY);
 };
 
-// ----- JWT helpers -----
 type JwtPayload = { exp?: number; [k: string]: any };
 const decode = (t?: string): JwtPayload => {
   if (!t) return {};
@@ -44,7 +41,7 @@ const isExpired = (t?: string, skewSec = 30) => {
   return exp - skewSec <= nowSec;
 };
 
-// ----- Refresh flow (single flight) -----
+
 let refreshing = false;
 let waiters: Array<(v: string | null) => void> = [];
 
@@ -74,7 +71,6 @@ const doRefresh = async (): Promise<string> => {
     waiters.forEach((w) => w(null));
     waiters = [];
     clearTokens();
-    // For non-login flows we hard-redirect to login when refresh fails
     if (!window.location.pathname.startsWith("/login")) {
       window.location.assign("/login?expired=1");
     }
@@ -84,7 +80,6 @@ const doRefresh = async (): Promise<string> => {
   }
 };
 
-// ----- Small helpers -----
 const isAuthEndpoint = (url?: string) => {
   if (!url) return false;
   const u = url.toString();
@@ -95,24 +90,22 @@ const isAuthEndpoint = (url?: string) => {
   );
 };
 
-// Add an optional flag to skip auth redirect on specific requests
 declare module "axios" {
   export interface AxiosRequestConfig {
     skipAuthRedirect?: boolean;
-    _retry?: boolean; // internal flag for our retry logic
+    _retry?: boolean;
   }
 }
 
-// ----- Request interceptor -----
 api.interceptors.request.use(
     async (config) => {
       let access = getAccess();
-      // Proactive refresh if access token is near expiry
+
       if (access && isExpired(access, 30) && !isAuthEndpoint(config.url ?? "")) {
         try {
           access = await doRefresh();
         } catch {
-          // doRefresh handles redirect and token clearing
+
         }
       }
       access = getAccess();
@@ -125,7 +118,6 @@ api.interceptors.request.use(
     (e) => Promise.reject(e)
 );
 
-// ----- Response interceptor -----
 api.interceptors.response.use(
     (r) => r,
     async (err: AxiosError) => {
@@ -133,12 +125,11 @@ api.interceptors.response.use(
       const cfg = (err.config || {}) as AxiosRequestConfig;
       const url = cfg.url ?? "";
 
-      // If the request is for an auth endpoint, or caller opted out, just surface the error
+
       if (status === 401 && (isAuthEndpoint(url) || cfg.skipAuthRedirect)) {
         return Promise.reject(err);
       }
 
-      // For other endpoints: try refresh once then retry original request
       if (status === 401 && !cfg._retry) {
         cfg._retry = true;
         try {
@@ -147,7 +138,6 @@ api.interceptors.response.use(
           (cfg.headers as any).Authorization = `Bearer ${access}`;
           return api(cfg);
         } catch {
-          // doRefresh already cleared tokens and redirected
           return Promise.reject(err);
         }
       }

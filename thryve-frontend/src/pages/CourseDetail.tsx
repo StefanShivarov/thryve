@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -27,29 +27,163 @@ type Page<T> = {
     last: boolean;
 };
 
-type User = { id: string; email: string; username?: string; firstName?: string; lastName?: string };
+type User = { id: string; email?: string };
+type EnrollmentRequest = {
+    id: string;
+    state?: "PENDING" | "ACCEPTED" | "REJECTED";
+    course?: { id?: string | number };
+    courseId?: string | number;
+};
+
+function getTokenEmail(): string | null {
+    const t = localStorage.getItem("accessToken");
+    if (!t) return null;
+    try {
+        const [, b] = t.split(".");
+        const p = JSON.parse(atob(b || ""));
+        return p?.sub || null;
+    } catch {
+        return null;
+    }
+}
+
+async function resolveUserIdFresh(): Promise<string | null> {
+
+    try {
+        const meRes = await api.get("/api/users/me");
+        const me: User = meRes.data?.data ?? meRes.data;
+        if (me?.id) return me.id;
+    } catch {}
+
+    const email = getTokenEmail();
+    if (!email) return null;
+    try {
+        const res = await api.get("/api/users", {
+            params: { pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
+        });
+        const page: Page<User> = res.data?.data ?? res.data;
+        const found = (page?.content || []).find((u) => u.email === email);
+        return found?.id ?? null;
+    } catch {
+        return null;
+    }
+}
+
+async function resolveUserId(): Promise<string | null> {
+    const email = getTokenEmail();
+    if (!email) return null;
+    const cacheKey = `userId:${email}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+    const fresh = await resolveUserIdFresh();
+    if (fresh) localStorage.setItem(cacheKey, fresh);
+    return fresh;
+}
+
+function EnrollmentRequestButton({ courseId }: { courseId: string | number }) {
+    const canManage = hasAnyRole("CREATOR", "ADMIN");
+    const qc = useQueryClient();
+    const [userId, setUserId] = useState<string | null>(null);
+    const [signal, setSignal] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+
+    useEffect(() => {
+        resolveUserId().then(setUserId);
+    }, []);
+
+
+    useEffect(() => {
+        const i = setInterval(() => {
+            resolveUserId().then((uid) => setUserId((prev) => (prev !== uid ? uid : prev)));
+        }, 5000);
+        return () => clearInterval(i);
+    }, []);
+
+    const myReqQ = useQuery({
+        queryKey: ["my-enrollment-requests", userId],
+        queryFn: async () => {
+            const { data } = await api.get(`/api/users/${userId}/enrollment-requests`, {
+                params: { pageNumber: 0, pageSize: 500, sortBy: "id", direction: "DESC" },
+            });
+            return (data?.data ?? data) as Page<EnrollmentRequest>;
+        },
+        enabled: !!userId,
+        staleTime: 10_000,
+    });
+
+    const existingForCourse = useMemo(() => {
+        const items = myReqQ.data?.content ?? [];
+        return items.find((r) => String(r.courseId ?? r.course?.id) === String(courseId));
+    }, [myReqQ.data, courseId]);
+
+    const isPending = existingForCourse?.state === "PENDING";
+    const isAccepted = existingForCourse?.state === "ACCEPTED";
+
+    const createMut = useMutation({
+        mutationFn: async () => {
+            const currentUserId = await resolveUserId();
+            if (!currentUserId) throw { response: { status: 401 } };
+            const { data } = await api.post(
+                `/api/courses/${courseId}/enrollment-requests`,
+                null,
+                { params: { userId: currentUserId } }
+            );
+            return data?.data ?? data;
+        },
+        onSuccess: () => {
+            setSignal({ kind: "ok", text: "Request sent." });
+            qc.invalidateQueries({ queryKey: ["my-enrollment-requests", userId!] });
+            setTimeout(() => setSignal(null), 2500);
+        },
+        onError: (e: any) => {
+            const s = e?.response?.status;
+            const msg =
+                e?.response?.data?.message ||
+                (s === 401 ? "Please sign in." : s === 403 ? "Not allowed." : s === 409 ? "Request already exists." : "Failed to send request.");
+            setSignal({ kind: "err", text: msg });
+            setTimeout(() => setSignal(null), 3000);
+        },
+    });
+
+    if (canManage) return null;
+
+    const disabled = !userId || createMut.isPending || isPending || isAccepted;
+
+    return (
+        <div className="flex flex-col items-end gap-1">
+            <button
+                type="button"
+                onClick={() => createMut.mutate()}
+                disabled={disabled}
+                className={
+                    "rounded-lg px-4 py-2 text-sm font-medium text-white shadow focus:outline-none disabled:opacity-60 " +
+                    (disabled ? "bg-violet-400" : "bg-violet-600 hover:bg-violet-700")
+                }
+                title={isAccepted ? "Already enrolled." : isPending ? "Request pending." : "Request enrollment."}
+            >
+                {isAccepted ? "Enrolled" : isPending ? "Pending…" : createMut.isPending ? "Sending…" : "Request enrollment"}
+            </button>
+            {signal && <div className={(signal.kind === "ok" ? "text-emerald-700" : "text-red-700") + " text-xs"}>{signal.text}</div>}
+        </div>
+    );
+}
 
 export default function CourseDetail() {
     const canManage = hasAnyRole("CREATOR", "ADMIN");
     const { id } = useParams<{ id: string }>();
     const [tab, setTab] = useState<"overview" | "sections" | "assignments">("overview");
-
-    // Course edit modal
     const [showEditCourse, setShowEditCourse] = useState(false);
     const [editCourse, setEditCourse] = useState<Partial<Course>>({});
     const [courseSaved, setCourseSaved] = useState(false);
-
-    // Section create/edit modals
     const [showCreateSection, setShowCreateSection] = useState(false);
     const [newSection, setNewSection] = useState<Partial<Section>>({ title: "", textContent: "", orderNumber: 1 });
-
     const [showEditSection, setShowEditSection] = useState(false);
     const [sectionEditing, setSectionEditing] = useState<Section | null>(null);
     const [editSection, setEditSection] = useState<Partial<Section>>({});
-
+    const [showEnrolled, setShowEnrolled] = useState(false);
+    const [enrolledError, setEnrolledError] = useState<string | null>(null);
     const qc = useQueryClient();
 
-    // ===== Queries =====
     const courseQ = useQuery({
         queryKey: ["course", id],
         queryFn: async () => {
@@ -70,7 +204,6 @@ export default function CourseDetail() {
         enabled: !!id,
     });
 
-    // Fetch just to show the “Assignments” count in header
     const assignmentsQ = useQuery({
         queryKey: ["assignments-count", id],
         queryFn: async () => {
@@ -82,73 +215,49 @@ export default function CourseDetail() {
         enabled: !!id,
     });
 
+    const enrolledQ = useQuery({
+        queryKey: ["course-enrollments", id],
+        queryFn: async () => {
+            const { data } = await api.get(`/api/enrollments`, {
+                params: { courseId: id, pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
+            });
+            return data?.data ?? data;
+        },
+        enabled: !!id && showEnrolled,
+        onError: (e: any) => {
+            const msg = e?.response?.data?.message || "Failed to load enrolled users.";
+            setEnrolledError(msg);
+        },
+    });
+
+    const enrolledUsers = useMemo(() => {
+        const raw: any = enrolledQ.data;
+        const list: any[] = raw?.content ?? raw ?? [];
+        return list.map((item) => {
+            const u = item?.user ?? item;
+            return {
+                id: u?.id,
+                email: u?.email,
+                username: u?.username,
+                firstName: u?.firstName,
+                lastName: u?.lastName,
+                joinedAt: item?.createdAt ?? item?.enrolledAt ?? null,
+            } as {
+                id?: string;
+                email?: string;
+                username?: string;
+                firstName?: string;
+                lastName?: string;
+                joinedAt?: string | null;
+            };
+        });
+    }, [enrolledQ.data]);
+
     const course = courseQ.data;
     const sections = sectionsQ.data?.content ?? [];
     const lessonCount = sections.length;
     const assignmentCount = assignmentsQ.data?.totalElements ?? 0;
 
-    // ===== Share & Enroll =====
-    const handleShare = async () => {
-        const url = window.location.href;
-        try {
-            if (navigator.share) {
-                await navigator.share({ title: course?.title ?? "Course", url });
-                return;
-            }
-            await navigator.clipboard.writeText(url);
-            alert("Link copied to clipboard!");
-        } catch {
-            const ta = document.createElement("textarea");
-            ta.value = url;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand("copy");
-            ta.remove();
-            alert("Link copied to clipboard!");
-        }
-    };
-
-    const enrollMutation = useMutation({
-        mutationFn: async () => {
-            let me: User | undefined;
-            try {
-                const meRes = await api.get("/api/users/me");
-                me = (meRes.data?.data ?? meRes.data) as User;
-            } catch {}
-            if (!me?.id) {
-                const token = localStorage.getItem("accessToken") ?? "";
-                const email = token.split(".")[1] ? JSON.parse(atob(token.split(".")[1]))?.sub : undefined;
-                const usersRes = await api.get("/api/users", {
-                    params: { pageNumber: 0, pageSize: 1000, sortBy: "id", direction: "ASC" },
-                });
-                const page = usersRes.data?.data ?? usersRes.data;
-                const list: User[] = page?.content ?? page ?? [];
-                me = list.find((u) => u.email === email);
-            }
-            if (!me?.id) throw new Error("USER_NOT_FOUND");
-            const { data } = await api.post(`/api/enrollment-requests`, { userId: me.id, courseId: id });
-            return data?.data ?? data;
-        },
-        onSuccess: () => {
-            alert("Request sent! An instructor/admin will review it.");
-            qc.invalidateQueries({ queryKey: ["course-requests", id] });
-        },
-        onError: (err: any) => {
-            const status = err?.response?.status;
-            const msg =
-                err?.response?.data?.message ||
-                (status === 401
-                    ? "Please sign in again."
-                    : status === 403
-                        ? "You don’t have permission to request enrollment for this course."
-                        : status === 409
-                            ? "You’ve already requested enrollment."
-                            : "An unexpected error occurred!");
-            alert(msg);
-        },
-    });
-
-    // ===== Mutations: Course update =====
     const updateCourseMut = useMutation({
         mutationFn: async (payload: Partial<Course>) => {
             const body: any = {};
@@ -167,7 +276,6 @@ export default function CourseDetail() {
         },
     });
 
-    // ===== Mutations: Section CRUD =====
     const createSectionMut = useMutation({
         mutationFn: async (payload: Partial<Section>) => {
             const body: any = {
@@ -212,7 +320,6 @@ export default function CourseDetail() {
         },
     });
 
-    // ===== UI helpers =====
     const gradients = [
         "from-indigo-500 via-blue-500 to-purple-500",
         "from-fuchsia-500 via-pink-500 to-rose-500",
@@ -230,9 +337,7 @@ export default function CourseDetail() {
             ];
 
     const Badge = ({ children }: { children: React.ReactNode }) => (
-        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">
-      {children}
-    </span>
+        <span className="inline-flex items-center rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-gray-800">{children}</span>
     );
 
     const Pill = ({
@@ -246,16 +351,12 @@ export default function CourseDetail() {
     }) => (
         <button
             onClick={onClick}
-            className={
-                "rounded-full px-4 py-2 text-sm font-medium transition " +
-                (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")
-            }
+            className={"rounded-full px-4 py-2 text-sm font-medium transition " + (active ? "bg-black text-white shadow" : "bg-white text-gray-700 border hover:bg-gray-50")}
         >
             {children}
         </button>
     );
 
-    // ===== Loading / error states =====
     if (courseQ.isLoading) {
         return (
             <div className="p-6">
@@ -278,12 +379,10 @@ export default function CourseDetail() {
         );
     }
 
-    // ===== Render =====
     return (
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
             <div className="pb-10">
-                {/* Header banner */}
                 <div className="relative">
                     <div className={`h-40 w-full bg-gradient-to-br ${gradient}`} />
                     {course.imageUrl && (
@@ -301,7 +400,8 @@ export default function CourseDetail() {
                         </div>
                         <div className="flex items-center justify-between">
                             <h1 className="text-2xl font-semibold">{course.title}</h1>
-                            {canManage && (
+                            {}
+                            {canManage ? (
                                 <button
                                     className="rounded-lg border bg-white/90 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white"
                                     onClick={() => {
@@ -311,6 +411,8 @@ export default function CourseDetail() {
                                 >
                                     Edit
                                 </button>
+                            ) : (
+                                id && <EnrollmentRequestButton courseId={id} />
                             )}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -320,16 +422,11 @@ export default function CourseDetail() {
                     </div>
                 </div>
 
-                {/* Content */}
                 <div className="px-6">
-                    {/* Save toast */}
                     {courseSaved && (
-                        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                            Course updated successfully.
-                        </div>
+                        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Course updated successfully.</div>
                     )}
 
-                    {/* Tabs */}
                     <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2">
                             <Pill active={tab === "overview"} onClick={() => setTab("overview")}>Overview</Pill>
@@ -338,23 +435,27 @@ export default function CourseDetail() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
-                                All Courses
-                            </Link>
-                            <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
-                                Requests
-                            </Link>
-                            <button
-                                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white shadow hover:opacity-90 disabled:opacity-60"
-                                onClick={() => enrollMutation.mutate()}
-                                disabled={enrollMutation.isPending}
-                            >
-                                {enrollMutation.isPending ? "Requesting…" : "Request access"}
-                            </button>
+                            <Link to="/courses" className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">All Courses</Link>
+                            {}
+                            {canManage && (
+                                <Link to={`/courses/${id}/requests`} className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
+                                    Requests
+                                </Link>
+                            )}
+                            {canManage && (
+                                <button
+                                    className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                                    onClick={() => {
+                                        setEnrolledError(null);
+                                        setShowEnrolled(true);
+                                    }}
+                                >
+                                    Enrolled
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* OVERVIEW */}
                     {tab === "overview" && (
                         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
                             <div className="rounded-2xl border bg-white p-6">
@@ -380,23 +481,36 @@ export default function CourseDetail() {
                                 <div className="rounded-2xl border bg-white p-6">
                                     <h3 className="text-sm font-semibold text-gray-700">Actions</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50" onClick={handleShare}>
+                                        <button
+                                            className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+                                            onClick={async () => {
+                                                const url = window.location.href;
+                                                try {
+                                                    if (navigator.share) await navigator.share({ title: course?.title ?? "Course", url });
+                                                    else {
+                                                        await navigator.clipboard.writeText(url);
+                                                        alert("Link copied to clipboard!");
+                                                    }
+                                                } catch {
+                                                    const ta = document.createElement("textarea");
+                                                    ta.value = url;
+                                                    document.body.appendChild(ta);
+                                                    ta.select();
+                                                    document.execCommand("copy");
+                                                    ta.remove();
+                                                    alert("Link copied to clipboard!");
+                                                }
+                                            }}
+                                        >
                                             Share
                                         </button>
-                                        <button
-                                            className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
-                                            onClick={() => enrollMutation.mutate()}
-                                            disabled={enrollMutation.isPending}
-                                        >
-                                            {enrollMutation.isPending ? "Requesting…" : "Request access"}
-                                        </button>
+                                        {}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* SECTIONS */}
                     {tab === "sections" && (
                         <div className="mt-6">
                             {canManage && (
@@ -447,20 +561,16 @@ export default function CourseDetail() {
                         </div>
                     )}
 
-                    {/* ASSIGNMENTS */}
                     {tab === "assignments" && id && <AssignmentsPanel courseId={id} />}
                 </div>
             </div>
 
-            {/* ===== Modal: Edit Course ===== */}
             {showEditCourse && course && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Edit course</h2>
-                            <button onClick={() => setShowEditCourse(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
-                                Close
-                            </button>
+                            <button onClick={() => setShowEditCourse(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">Close</button>
                         </div>
 
                         {updateCourseMut.isError && (
@@ -509,9 +619,7 @@ export default function CourseDetail() {
                             </div>
 
                             <div className="mt-4 flex items-center justify-end gap-2">
-                                <button type="button" onClick={() => setShowEditCourse(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
-                                    Cancel
-                                </button>
+                                <button type="button" onClick={() => setShowEditCourse(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">Cancel</button>
                                 <button type="submit" disabled={updateCourseMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
                                     {updateCourseMut.isPending ? "Saving…" : "Save"}
                                 </button>
@@ -521,15 +629,12 @@ export default function CourseDetail() {
                 </div>
             )}
 
-            {/* ===== Modal: Create Section ===== */}
             {showCreateSection && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Add section</h2>
-                            <button onClick={() => setShowCreateSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
-                                Close
-                            </button>
+                            <button onClick={() => setShowCreateSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">Close</button>
                         </div>
 
                         {createSectionMut.isError && (
@@ -578,9 +683,7 @@ export default function CourseDetail() {
                             </div>
 
                             <div className="mt-4 flex items-center justify-end gap-2">
-                                <button type="button" onClick={() => setShowCreateSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
-                                    Cancel
-                                </button>
+                                <button type="button" onClick={() => setShowCreateSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">Cancel</button>
                                 <button type="submit" disabled={createSectionMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
                                     {createSectionMut.isPending ? "Creating…" : "Create"}
                                 </button>
@@ -590,15 +693,12 @@ export default function CourseDetail() {
                 </div>
             )}
 
-            {/* ===== Modal: Edit Section ===== */}
             {showEditSection && sectionEditing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl border bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Edit section</h2>
-                            <button onClick={() => setShowEditSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">
-                                Close
-                            </button>
+                            <button onClick={() => setShowEditSection(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">Close</button>
                         </div>
 
                         {updateSectionMut.isError && (
@@ -650,14 +750,63 @@ export default function CourseDetail() {
                             </div>
 
                             <div className="mt-4 flex items-center justify-end gap-2">
-                                <button type="button" onClick={() => setShowEditSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">
-                                    Cancel
-                                </button>
+                                <button type="button" onClick={() => setShowEditSection(false)} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50">Cancel</button>
                                 <button type="submit" disabled={updateSectionMut.isPending} className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
                                     {updateSectionMut.isPending ? "Saving…" : "Save"}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {canManage && showEnrolled && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-2xl rounded-2xl border bg-white p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Enrolled users</h2>
+                            <button onClick={() => setShowEnrolled(false)} className="rounded-md border bg-white px-3 py-1 text-sm hover:bg-gray-50">Close</button>
+                        </div>
+
+                        {enrolledError && (
+                            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{enrolledError}</div>
+                        )}
+
+                        {enrolledQ.isLoading ? (
+                            <div className="grid gap-2">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="h-10 animate-pulse rounded-lg border bg-gray-100" />
+                                ))}
+                            </div>
+                        ) : (enrolledUsers?.length ?? 0) === 0 ? (
+                            <div className="rounded-xl border bg-gray-50 p-6 text-center text-gray-600">No users enrolled yet.</div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm">
+                                    <thead>
+                                    <tr className="text-left text-gray-600">
+                                        <th className="px-3 py-2">Name</th>
+                                        <th className="px-3 py-2">Username</th>
+                                        <th className="px-3 py-2">Email</th>
+                                        <th className="px-3 py-2">Enrolled</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {enrolledUsers.map((u, i) => {
+                                        const full = (u.firstName || u.lastName) ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() : "";
+                                        return (
+                                            <tr key={`${u.id ?? i}`} className="border-t">
+                                                <td className="px-3 py-2">{full || "—"}</td>
+                                                <td className="px-3 py-2">{u.username || "—"}</td>
+                                                <td className="px-3 py-2">{u.email || "—"}</td>
+                                                <td className="px-3 py-2">{u.joinedAt ? new Date(String(u.joinedAt).replace(" ", "T")).toLocaleString() : "—"}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

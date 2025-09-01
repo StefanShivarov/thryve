@@ -18,7 +18,6 @@ export default function SectionCard({
 
     return (
         <li className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-            {/* Header row */}
             <div
                 className="flex cursor-pointer items-start justify-between p-4 hover:bg-gray-50"
                 onClick={() => setOpen((v) => !v)}
@@ -54,7 +53,6 @@ export default function SectionCard({
                 </div>
             </div>
 
-            {/* Body */}
             {open && (
                 <>
                     {section.textContent && (

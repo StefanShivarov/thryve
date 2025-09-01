@@ -36,7 +36,6 @@ function decodeEmailFromJwt(): string | null {
     }
 }
 
-/** Primary: /api/users/me. Fallback: try to resolve by email from JWT. */
 async function fetchCurrentUser(): Promise<User> {
     // Try /me first
     try {
@@ -150,10 +149,9 @@ export default function Profile() {
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
             <div className="p-6">
-                {/* Loading */}
+
                 {meQ.isLoading && <div className="h-36 animate-pulse rounded-3xl bg-gray-200" />}
 
-                {/* Error state */}
                 {meQ.error && (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
                         Couldn’t load your profile.&nbsp;
@@ -163,7 +161,6 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* Content */}
                 {meQ.data && (
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
                         <div className="rounded-2xl border bg-white p-6">
