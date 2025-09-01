@@ -225,8 +225,7 @@ public class EnrollmentServiceTest {
         Exception exception = assertThrows(EntityAlreadyExistsException.class,
             () -> enrollmentService.createEnrollment(enrollmentCreateDto));
 
-        assertEquals(format(ENROLLMENT_ALREADY_EXISTS_ERROR_MESSAGE,
-            TEST_ENROLLMENT.getUser().getId(), TEST_ENROLLMENT.getCourse().getId()),
+        assertEquals(ENROLLMENT_ALREADY_EXISTS_ERROR_MESSAGE,
             exception.getMessage());
     }
 

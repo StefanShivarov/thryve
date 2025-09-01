@@ -7,7 +7,7 @@ import { hasAnyRole } from "../lib/auth";
 import SectionCard from "../components/sections/SectionCard";
 import AssignmentsPanel from "../components/assignments/AssignmentsPanel";
 
-type Course = {
+export type Course = {
     id: number | string;
     title: string;
     description?: string;
@@ -111,13 +111,25 @@ function EnrollmentRequestButton({ courseId }: { courseId: string | number }) {
         staleTime: 10_000,
     });
 
+    const enrollmentsQ = useQuery({
+        queryKey: ["my-enrollments", userId, courseId],
+        queryFn: async () => {
+            const { data } = await api.get(`/api/enrollments`, {
+                params: { userId, courseId },
+            });
+            return data?.data ?? data;
+        },
+        enabled: !!userId && !!courseId,
+        staleTime: 10_000,
+    })
+
     const existingForCourse = useMemo(() => {
         const items = myReqQ.data?.content ?? [];
         return items.find((r) => String(r.courseId ?? r.course?.id) === String(courseId));
     }, [myReqQ.data, courseId]);
 
     const isPending = existingForCourse?.state === "PENDING";
-    const isAccepted = existingForCourse?.state === "ACCEPTED";
+    const isAccepted = existingForCourse?.state === "ACCEPTED" || (enrollmentsQ.data?.content ?? []).length > 0;
 
     const createMut = useMutation({
         mutationFn: async () => {
@@ -145,7 +157,7 @@ function EnrollmentRequestButton({ courseId }: { courseId: string | number }) {
         },
     });
 
-    if (canManage) return null;
+    if (canManage || isAccepted) return null;
 
     const disabled = !userId || createMut.isPending || isPending || isAccepted;
 

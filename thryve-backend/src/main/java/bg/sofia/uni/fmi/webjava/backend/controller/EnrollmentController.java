@@ -36,7 +36,7 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping(value = {"", "/"})
     public ResponseEntity<Page<EnrollmentResponseDto>> getEnrollmentsByCourseId(
         @RequestParam(required = false) UUID userId,
