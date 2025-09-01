@@ -25,6 +25,7 @@ import static java.lang.String.format;
 public class UserService {
 
     public static final String USER_NOT_FOUND_ERROR_MESSAGE = "User with id %s was not found!";
+    public static final String USER_WITH_EMAIL_NOT_FOUND_ERROR_MESSAGE = "User with email %s was not found!";
     public static final String USER_WITH_EMAIL_ALREADY_EXISTS_ERROR_MESSAGE = "User with email %s already exists!";
     public static final String USER_WITH_USERNAME_ALREADY_EXISTS_ERROR_MESSAGE = "User with username %s already exists!";
 
@@ -84,19 +85,13 @@ public class UserService {
         return userResponseDto;
     }
 
+    @Transactional
     public UserResponseDto getUserByEmail(String email) {
-        var user = userRepository.findByEmail(email).orElseThrow();
-        return toResponse(user);
-    }
-
-    private UserResponseDto toResponse(User u) {
-        var dto = new UserResponseDto();
-        dto.setId(u.getId());
-        dto.setEmail(u.getEmail());
-        dto.setUsername(u.getUsername());
-        dto.setFirstName(u.getFirstName());
-        dto.setLastName(u.getLastName());
-        return dto;
+        User user = userRepository.findByEmail(email).orElseThrow(
+            () -> new EntityNotFoundException(
+                format(USER_WITH_EMAIL_NOT_FOUND_ERROR_MESSAGE, email))
+        );
+        return userDtoMapper.mapUserToResponseDto(user);
     }
 
 }

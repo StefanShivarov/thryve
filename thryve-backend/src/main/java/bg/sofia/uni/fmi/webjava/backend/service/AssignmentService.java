@@ -22,7 +22,7 @@ import static java.lang.String.format;
 @RequiredArgsConstructor
 public class AssignmentService {
 
-    private static final String ASSIGNMENT_NOT_FOUND_ERROR_MESSAGE = "Assignment with id %s was not found!";
+    public static final String ASSIGNMENT_NOT_FOUND_ERROR_MESSAGE = "Assignment with id %s was not found!";
 
     private final AssignmentRepository assignmentRepository;
     private final AssignmentDtoMapper assignmentDtoMapper;

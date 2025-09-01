@@ -30,9 +30,9 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class AssignmentController {
 
-    private static final String ASSIGNMENT_CREATED_MESSAGE = "Assignment created successfully!";
-    private static final String ASSIGNMENT_UPDATED_MESSAGE = "Assignment updated successfully!";
-    private static final String ASSIGNMENT_DELETED_MESSAGE = "Assignment deleted successfully!";
+    public static final String ASSIGNMENT_CREATED_MESSAGE = "Assignment created successfully!";
+    public static final String ASSIGNMENT_UPDATED_MESSAGE = "Assignment updated successfully!";
+    public static final String ASSIGNMENT_DELETED_MESSAGE = "Assignment deleted successfully!";
 
     private final AssignmentService assignmentService;
 

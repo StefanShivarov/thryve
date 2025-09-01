@@ -25,9 +25,9 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class EnrollmentRequestController {
 
-    private static final String ENROLLMENT_REQUEST_CREATED_MESSAGE = "Enrollment request created successfully!";
-    private static final String ENROLLMENT_REQUEST_UPDATED_MESSAGE = "Enrollment request updated successfully!";
-    private static final String ENROLLMENT_REQUEST_DELETED_MESSAGE = "Enrollment request deleted successfully!";
+    public static final String ENROLLMENT_REQUEST_CREATED_MESSAGE = "Enrollment request created successfully!";
+    public static final String ENROLLMENT_REQUEST_UPDATED_MESSAGE = "Enrollment request updated successfully!";
+    public static final String ENROLLMENT_REQUEST_DELETED_MESSAGE = "Enrollment request deleted successfully!";
 
     private final EnrollmentRequestService enrollmentRequestService;
 
@@ -41,7 +41,7 @@ public class EnrollmentRequestController {
         @RequestParam(defaultValue = "ASC") String direction
     ) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
-        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentsByCourseId(courseId, pageable);
+        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByCourseId(courseId, pageable);
         return ResponseEntity.ok(enrollmentRequests);
     }
 
@@ -54,9 +54,8 @@ public class EnrollmentRequestController {
         @RequestParam(defaultValue = "id") String sortBy,
         @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize,
-            Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
-        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentsByUserId(userId, pageable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
+        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByUserId(userId, pageable);
         return ResponseEntity.ok(enrollmentRequests);
     }
 

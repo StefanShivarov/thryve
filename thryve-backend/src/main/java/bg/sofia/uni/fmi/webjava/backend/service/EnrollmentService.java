@@ -25,6 +25,8 @@ import static java.lang.String.format;
 public class EnrollmentService {
 
     public static final String ENROLLMENT_NOT_FOUND_ERROR_MESSAGE = "Enrollment with id %s was not found!";
+    public static final String ENROLLMENT_ALREADY_EXISTS_ERROR_MESSAGE =
+        "Enrollment with userId %s and courseId %s already exists!";
 
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentDtoMapper enrollmentDtoMapper;
@@ -71,7 +73,10 @@ public class EnrollmentService {
     public EnrollmentResponseDto createEnrollment(EnrollmentCreateDto dto) {
         Enrollment enrollment = enrollmentDtoMapper.mapDtoToEnrollment(dto);
         if (!getEnrollmentsByCourseIdAndUserId(dto.getCourseId(), dto.getUserId(), Pageable.unpaged()).isEmpty()) {
-            throw new EntityAlreadyExistsException("Enrollment with userId %s and courseId %s already exists!");
+            throw new EntityAlreadyExistsException(
+                format(ENROLLMENT_ALREADY_EXISTS_ERROR_MESSAGE,
+                    enrollment.getUser().getId(),
+                    enrollment.getCourse().getId()));
         }
         Course course = courseService.getCourseEntityById(dto.getCourseId());
         User user = userService.getUserEntityById(dto.getUserId());

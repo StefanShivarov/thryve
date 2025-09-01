@@ -22,7 +22,7 @@ import static java.lang.String.format;
 @RequiredArgsConstructor
 public class SectionService {
 
-    private static final String SECTION_NOT_FOUND_MESSAGE = "Section with id %s not found";
+    public static final String SECTION_NOT_FOUND_MESSAGE = "Section with id %s not found";
 
     private final SectionRepository sectionRepository;
     private final SectionDtoMapper sectionDtoMapper;

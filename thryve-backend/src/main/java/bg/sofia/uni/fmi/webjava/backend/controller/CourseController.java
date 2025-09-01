@@ -32,12 +32,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CourseController {
 
-    private static final String COURSE_UPDATED_MESSAGE = "Course updated successfully!";
-    private static final String COURSE_DELETED_MESSAGE = "Course deleted successfully!";
+    public static final String COURSE_UPDATED_MESSAGE = "Course updated successfully!";
+    public static final String COURSE_DELETED_MESSAGE = "Course deleted successfully!";
 
     private final CourseService courseService;
 
-    //@PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STANDARD', 'CREATOR', 'ADMIN')")
     @GetMapping(value = {"", "/"})
     public ResponseEntity<Page<CourseResponseDto>> getAllCourses(
         @RequestParam(defaultValue = "0") int pageNumber,
@@ -60,7 +60,7 @@ public class CourseController {
     @PostMapping(value = {"", "/"})
     public ResponseEntity<CourseResponseDto> createCourse(
         @RequestBody @Valid CourseCreateDto courseCreateDto,
-        org.springframework.security.core.Authentication authentication
+        Authentication authentication
     ) {
         return ResponseEntity
             .status(HttpStatus.CREATED)

@@ -31,9 +31,9 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class AssignmentSubmissionController {
 
-    private static final String SUBMISSION_CREATED_MESSAGE = "Submission created successfully!";
-    private static final String SUBMISSION_DELETED_MESSAGE = "Submission deleted successfully!";
-    private static final String SUBMISSION_UPDATED_MESSAGE = "Submission updated successfully!";
+    public static final String SUBMISSION_CREATED_MESSAGE = "Submission created successfully!";
+    public static final String SUBMISSION_DELETED_MESSAGE = "Submission deleted successfully!";
+    public static final String SUBMISSION_UPDATED_MESSAGE = "Submission updated successfully!";
 
     private final AssignmentSubmissionService assignmentSubmissionService;
 
