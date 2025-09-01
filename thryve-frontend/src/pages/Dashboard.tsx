@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import AppHeader from "../components/AppHeader";
 import { api } from "../lib/api";
+import CourseCard, { Course } from "../components/CourseCard";
 
 function IconBookOpen(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -120,6 +121,34 @@ export default function Dashboard() {
 
     const pendingCount = pendingQ.data ?? 0;
 
+    const enrolledCoursesQ = useQuery({
+        queryKey: ["enrolled-courses", userId],
+        queryFn: async () => {
+            const { data } = await api.get(`/api/enrollments`, {
+                params: { userId },
+            });
+            return data?.data ?? data;
+        },
+        enabled: !!userId,
+    });
+
+    type Enrollment = {
+        id: string;
+        course: Course;
+        enrollmentType: string;
+        user: {
+            id: string;
+            username: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+        };
+    };
+
+    const enrolledCourses: Course[] = (enrolledCoursesQ.data?.content ?? []).map(
+        (enrollment: Enrollment) => enrollment.course
+    );
+
     return (
         <div className="min-h-screen bg-gray-50">
             <AppHeader />
@@ -176,6 +205,20 @@ export default function Dashboard() {
                         </div>
                         <p className="mt-3 text-sm text-gray-600">View and edit your details.</p>
                     </Link>
+                </div>
+                <div className="mt-8">
+                    <h2 className="text-lg font-semibold">Your Courses</h2>
+                    {enrolledCoursesQ.isLoading ? (
+                        <div className="mt-4">Loading your courses...</div>
+                    ) : enrolledCourses.length === 0 ? (
+                        <div className="mt-4 text-gray-600">You are not enrolled in any courses yet.</div>
+                    ) : (
+                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {enrolledCourses.map((course) => (
+                                <CourseCard key={course.id} course={course} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
