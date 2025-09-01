@@ -26,9 +26,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ResourceController {
 
-    private static final String RESOURCE_CREATED_MESSAGE = "Resource created successfully!";
-    private static final String RESOURCE_UPDATED_MESSAGE = "Resource updated successfully!";
-    private static final String RESOURCE_DELETED_MESSAGE = "Resource deleted successfully!";
+    public static final String RESOURCE_CREATED_MESSAGE = "Resource created successfully!";
+    public static final String RESOURCE_UPDATED_MESSAGE = "Resource updated successfully!";
+    public static final String RESOURCE_DELETED_MESSAGE = "Resource deleted successfully!";
 
     private final ResourceService resourceService;
 

@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.webjava.backend.utils;
 
+import bg.sofia.uni.fmi.webjava.backend.model.dto.NotificationResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.assignment.AssignmentResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.assignment.submission.AssignmentSubmissionResponseDto;
 import bg.sofia.uni.fmi.webjava.backend.model.dto.course.CoursePreviewDto;
@@ -15,6 +16,7 @@ import bg.sofia.uni.fmi.webjava.backend.model.entity.Course;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Enrollment;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentRequest;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentState;
+import bg.sofia.uni.fmi.webjava.backend.model.entity.EnrollmentType;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Resource;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.Section;
 import bg.sofia.uni.fmi.webjava.backend.model.entity.User;
@@ -149,6 +151,7 @@ public class TestUtils {
         enrollmentResponseDto.setId(ENROLLMENT_ID);
         enrollmentResponseDto.setUser(createStandardUserResponseDto());
         enrollmentResponseDto.setCourse(createTestCoursePreviewDto());
+        enrollmentResponseDto.setEnrollmentType(EnrollmentType.STUDENT);
         return enrollmentResponseDto;
     }
 
@@ -250,6 +253,18 @@ public class TestUtils {
         resourceResponseDto.setName(RESOURCE_NAME);
         resourceResponseDto.setUrl(RESOURCE_URL);
         return resourceResponseDto;
+    }
+
+    public static NotificationResponseDto createTestNotificationResponseDto() {
+        NotificationResponseDto notificationResponseDto = new NotificationResponseDto();
+        notificationResponseDto.setId(UUID.randomUUID());
+        notificationResponseDto.setMessage("This is a test notification.");
+        notificationResponseDto.setCreatedAt(LocalDateTime.now());
+        notificationResponseDto.setRead(false);
+        notificationResponseDto.setTitle("Test Notification");
+        notificationResponseDto.setSender(createStandardUserResponseDto());
+        notificationResponseDto.setCourse(createTestCoursePreviewDto());
+        return notificationResponseDto;
     }
 
 }

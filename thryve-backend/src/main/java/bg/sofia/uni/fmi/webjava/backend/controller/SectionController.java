@@ -30,9 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SectionController {
 
-    private static final String SECTION_CREATED_MESSAGE = "Section created successfully!";
-    private static final String SECTION_UPDATED_MESSAGE = "Section updated successfully!";
-    private static final String SECTION_DELETED_MESSAGE = "Section deleted successfully!";
+    public static final String SECTION_CREATED_MESSAGE = "Section created successfully!";
+    public static final String SECTION_UPDATED_MESSAGE = "Section updated successfully!";
+    public static final String SECTION_DELETED_MESSAGE = "Section deleted successfully!";
 
     private final SectionService sectionService;
 

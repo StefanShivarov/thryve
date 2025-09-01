@@ -25,9 +25,9 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class EnrollmentRequestController {
 
-    private static final String ENROLLMENT_REQUEST_CREATED_MESSAGE = "Enrollment request created successfully!";
-    private static final String ENROLLMENT_REQUEST_UPDATED_MESSAGE = "Enrollment request updated successfully!";
-    private static final String ENROLLMENT_REQUEST_DELETED_MESSAGE = "Enrollment request deleted successfully!";
+    public static final String ENROLLMENT_REQUEST_CREATED_MESSAGE = "Enrollment request created successfully!";
+    public static final String ENROLLMENT_REQUEST_UPDATED_MESSAGE = "Enrollment request updated successfully!";
+    public static final String ENROLLMENT_REQUEST_DELETED_MESSAGE = "Enrollment request deleted successfully!";
 
     private final EnrollmentRequestService enrollmentRequestService;
 

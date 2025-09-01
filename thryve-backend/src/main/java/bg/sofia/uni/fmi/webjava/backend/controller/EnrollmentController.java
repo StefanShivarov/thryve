@@ -30,9 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EnrollmentController {
 
-    private static final String ENROLLMENT_CREATED_MESSAGE = "Enrollment created successfully!";
-    private static final String ENROLLMENT_UPDATED_MESSAGE = "Enrollment updated successfully!";
-    private static final String ENROLLMENT_DELETED_MESSAGE = "Enrollment deleted successfully!";
+    public static final String ENROLLMENT_CREATED_MESSAGE = "Enrollment created successfully!";
+    public static final String ENROLLMENT_UPDATED_MESSAGE = "Enrollment updated successfully!";
+    public static final String ENROLLMENT_DELETED_MESSAGE = "Enrollment deleted successfully!";
 
     private final EnrollmentService enrollmentService;
 
