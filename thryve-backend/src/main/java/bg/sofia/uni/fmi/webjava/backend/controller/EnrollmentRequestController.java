@@ -55,7 +55,7 @@ public class EnrollmentRequestController {
         @RequestParam(defaultValue = "ASC") String direction
     ) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromOptionalString(direction).orElse(Sort.Direction.ASC), sortBy));
-        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByUserId(courseId, pageable);
+        Page<EnrollmentRequestResponseDto> enrollmentRequests = enrollmentRequestService.getEnrollmentRequestsByUserId(userId, pageable);
         return ResponseEntity.ok(enrollmentRequests);
     }
 
